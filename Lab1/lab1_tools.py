@@ -1,5 +1,5 @@
 import numpy as np
-# DT2119, Lab 1 Feature Extraction
+# DT2119, Lab1 Feature Extraction
 # - Functions given by the exercise -------------------------------------------- 
 
 def tidigit2labels(tidigitsarray):

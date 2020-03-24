@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import scipy.signal
+from Lab1.lab1_tools import *
 
 
-# DT2119, Lab 1 Feature Extraction
+# DT2119, Lab1 Feature Extraction
 
 # Function given by the exercise ----------------------------------
 
@@ -114,9 +115,9 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
-    hamWin = scipy.signal.hamming(input.shape[1], sym=0)
+    hamming_window = scipy.signal.hamming(input.shape[1], sym=0)
 
-    return input * hamWin
+    return input * hamming_window
 
 
 def powerSpectrum(input, nfft):
@@ -146,6 +147,10 @@ def logMelSpectrum(input, samplingrate):
     Note: use the trfbank function provided in lab1_tools.py to calculate the filterbank shapes and
           nmelfilters
     """
+    #tranposed filter bank
+    filter_bank = trfbank(samplingrate, input.shape[1]).T
+    #Getting the log of the dot product of the input and filter bank
+    return np.log(np.dot(input, filter_bank))
 
 def cepstrum(input, nceps):
     """
