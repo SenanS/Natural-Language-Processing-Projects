@@ -184,5 +184,8 @@ if __name__ == "__main__":
     test = enframe(example['samples'], 400, 200)
     print(test)
     print("Frames shape: " + str(test.shape))
+
     plt.pcolormesh(test.T)
+    plt.show()
+    plt.pcolormesh(example['frames'].T)
     plt.show()
