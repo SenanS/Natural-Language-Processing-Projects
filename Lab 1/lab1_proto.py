@@ -84,7 +84,7 @@ def compare(frames1, frames2):
     
     print("Same!")
 
-    
+
 def preemp(input, p=0.97):
     """
     Pre-emphasis filter.
@@ -114,9 +114,8 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
-    # hamWin = signal.hamming(input.shape[1], sym=0)
+    hamWin = scipy.signal.hamming(input.shape[1], sym=0)
 
-    hamwin = 0
     return input * hamWin
 
 
@@ -173,14 +172,15 @@ def dtw(x, y, dist):
         d: global distance between the sequences (scalar) normalized to len(x)+len(y)
         LD: local distance between frames from x and y (NxM matrix)
         AD: accumulated distance between frames of x and y (NxM matrix)
-        path: best path thtough AD
+        path: best path through AD
 
     Note that you only need to define the first output for this exercise.
     """
 
 if __name__ == "__main__":
     # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
-    example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
+    # example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
+    example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
 
     # Frames:
     print("Sampling rate: " + str(example['samplingrate']))
@@ -189,6 +189,7 @@ if __name__ == "__main__":
     frames_test = enframe(example['samples'], 400, 200)
 
     # testing if frames is correct:
+    print("enframe")
     compare(frames_test, example['frames'])
     plt.pcolormesh(frames_test.T)
     plt.show()
@@ -198,9 +199,22 @@ if __name__ == "__main__":
     # Preemph:
     preemp_test = preemp(frames_test)
 
-    # Testing if correct: 
+    # Testing if correct:
+    print("Preemph")
     compare(preemp_test, example['preemph'])
     plt.pcolormesh(preemp_test.T)
     plt.show()
     plt.pcolormesh(example['preemph'].T)
     plt.show()
+
+    # Hamming Window:
+    hamming_test = windowing(preemp_test)
+
+    # Testing if correct:
+    print("Hamming")
+    compare(hamming_test, example['windowed'])
+    plt.pcolormesh(hamming_test.T)
+    plt.show()
+    plt.pcolormesh(example['windowed'].T)
+    plt.show()
+
