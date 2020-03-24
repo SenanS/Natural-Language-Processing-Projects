@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 # DT2119, Lab 1 Feature Extraction
 
@@ -66,9 +67,18 @@ def enframe(samples, winlen, winshift):
     """
     frames = samples[0:winlen].reshape((1, winlen))
 
-    for i in range(0, samples.shape[0] - winlen, winlen-winshift):
+    for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
         frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
     return frames
+
+
+def compare(frames1, frames2):
+    for i in range(frames1.shape[0]):
+        for j in range(frames1.shape[1]):
+            if frames1[i][j] != frames2[i][j]:
+                print("Not the same!")
+    
+    print("Same!")
 
     
 def preemp(input, p=0.97):
@@ -173,3 +183,6 @@ if __name__ == "__main__":
     # 20000 * 0.01 = 200
     test = enframe(example['samples'], 400, 200)
     print(test)
+    print("Frames shape: " + str(test.shape))
+    plt.pcolormesh(test.T)
+    plt.show()
