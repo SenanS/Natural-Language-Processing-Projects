@@ -66,7 +66,7 @@ def enframe(samples, winlen, winshift):
     """
     frames = samples[0:winlen].reshape((1, winlen))
 
-    for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
+    for i in range(0, samples.shape[0] - winlen, winlen-winshift):
         frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
     return frames
 
