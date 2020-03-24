@@ -116,6 +116,7 @@ def windowing(input):
     """
     hamWin = signal.hamming(input.shape[1], sym=0)
 
+
     return input * hamWin
 
 
