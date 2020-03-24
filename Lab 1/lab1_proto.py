@@ -114,9 +114,9 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
-    hamWin = signal.hamming(input.shape[1], sym=0)
+    # hamWin = signal.hamming(input.shape[1], sym=0)
 
-
+    hamwin = 0
     return input * hamWin
 
 
@@ -182,19 +182,25 @@ if __name__ == "__main__":
     # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
     example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
 
-    print(example['frames'])
-    print("Frames shape: " + str(example['frames'].shape))
-    # print(example['samples'])
-    print("Samples shape: " + str(example['samples'].shape))
+    # Frames:
     print("Sampling rate: " + str(example['samplingrate']))
-
     # 20000 * 0.02 = 400
     # 20000 * 0.01 = 200
-    test = enframe(example['samples'], 400, 200)
-    print(test)
-    print("Frames shape: " + str(test.shape))
+    frames_test = enframe(example['samples'], 400, 200)
 
-    plt.pcolormesh(test.T)
+    # testing if frames is correct:
+    compare(frames_test, example['frames'])
+    plt.pcolormesh(frames_test.T)
     plt.show()
     plt.pcolormesh(example['frames'].T)
+    plt.show()
+
+    # Preemph:
+    preemp_test = preemp(frames_test)
+
+    # Testing if correct: 
+    compare(preemp_test, example['preemph'])
+    plt.pcolormesh(preemp_test.T)
+    plt.show()
+    plt.pcolormesh(example['preemph'].T)
     plt.show()
