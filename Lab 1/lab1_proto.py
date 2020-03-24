@@ -1,6 +1,11 @@
 # DT2119, Lab 1 Feature Extraction
 
+
 # Function given by the exercise ----------------------------------
+import scipy
+from scipy import signal
+import numpy as np
+
 
 def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000)
     """Computes Mel Filterbank features.
@@ -71,6 +76,8 @@ def preemp(input, p=0.97):
         output: array of pre-emphasised speech samples
     Note (you can use the function lfilter from scipy.signal)
     """
+    #optional axis value in lfilter?
+    return scipy.signal.lfilter([1, -p], [1], input)
 
 
 def windowing(input):
