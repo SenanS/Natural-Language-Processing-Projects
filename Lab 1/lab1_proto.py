@@ -1,13 +1,10 @@
-# DT2119, Lab 1 Feature Extraction
-
-
-# Function given by the exercise ----------------------------------
-import scipy
-from scipy import signal
 import numpy as np
 
+# DT2119, Lab 1 Feature Extraction
 
-def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000)
+# Function given by the exercise ----------------------------------
+
+def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000):
     """Computes Mel Filterbank features.
 
     Args:
@@ -21,11 +18,14 @@ def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, sam
     Returns:
         N x nfilters array with mel filterbank features (see trfbank for nfilters)
     """
+    """
     frames = enframe(samples, winlen, winshift)
     preemph = preemp(frames, preempcoeff)
     windowed = windowing(preemph)
     spec = powerSpectrum(windowed, nfft)
     return logMelSpectrum(spec, samplingrate)
+    """
+    return None
 
 def mfcc(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, nceps=13, samplingrate=20000, liftercoeff=22):
     """Computes Mel Frequency Cepstrum Coefficients.
@@ -43,9 +43,13 @@ def mfcc(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, ncep
     Returns:
         N x nceps array with lifetered MFCC coefficients
     """
+    """
     mspecs = mspec(samples, winlen, winshift, preempcoeff, nfft, samplingrate)
     ceps = cepstrum(mspecs, nceps)
     return lifter(ceps, liftercoeff)
+    """
+    return None
+
 
 # Functions to be implemented ----------------------------------
 
@@ -60,7 +64,11 @@ def enframe(samples, winlen, winshift):
         numpy array [N x winlen], where N is the number of windows that fit
         in the input signal
     """
+    frames = samples[0:winlen].reshape((1, winlen))
 
+    for i in range(winlen-winshift, samples.shape[0], winlen-winshift):
+        frames = np.vstack((frames, samples[i:i+winlen].reshape(1, winlen)))
+    return frames
 
     
 def preemp(input, p=0.97):
@@ -150,3 +158,15 @@ def dtw(x, y, dist):
 
     Note that you only need to define the first output for this exercise.
     """
+
+if __name__ == "__main__":
+    # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
+    example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
+
+    print(example['frames'])
+    print("Frames shape: " + str(example['frames'].shape))
+    # print(example['samples'])
+    print("Samples shape: " + str(example['samples'].shape))
+    print("Sampling rate: " + str(example['samplingrate']))
+    test = enframe(example['samples'], 20, 10)
+    print(test)
