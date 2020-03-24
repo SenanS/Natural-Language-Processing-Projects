@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy
+from scipy import signal
 
 # DT2119, Lab 1 Feature Extraction
 
@@ -106,10 +108,12 @@ def windowing(input):
         input: array of speech samples [N x M] where N is the number of frames and
                M the samples per frame
     Output:
-        array of windoed speech samples [N x M]
+        array of windowed speech samples [N x M]
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
+    hamWin = signal.hamming(input.shape[1], sym=0)
+
 
 def powerSpectrum(input, nfft):
     """
