@@ -1,13 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
-from scipy import signal
+import scipy.signal
+
 
 # DT2119, Lab 1 Feature Extraction
 
 # Function given by the exercise ----------------------------------
 
-def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000):
+def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):
     """Computes Mel Filterbank features.
 
     Args:
@@ -30,7 +31,8 @@ def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, sam
     """
     return None
 
-def mfcc(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, nceps=13, samplingrate=20000, liftercoeff=22):
+
+def mfcc(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, nceps=13, samplingrate=20000, liftercoeff=22):
     """Computes Mel Frequency Cepstrum Coefficients.
 
     Args:
@@ -69,8 +71,8 @@ def enframe(samples, winlen, winshift):
     """
     frames = samples[0:winlen].reshape((1, winlen))
 
-    for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
-        frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
+    for i in range(winlen - winshift, samples.shape[0] - winlen, winlen - winshift):
+        frames = np.vstack((frames, samples[i:i + winlen].reshape((1, winlen))))
     return frames
 
 
@@ -79,10 +81,10 @@ def compare(frames1, frames2):
         for j in range(frames1.shape[1]):
             if frames1[i][j] != frames2[i][j]:
                 print("Not the same!")
-    
+
     print("Same!")
 
-    
+
 def preemp(input, p=0.97):
     """
     Pre-emphasis filter.
@@ -96,7 +98,7 @@ def preemp(input, p=0.97):
         output: array of pre-emphasised speech samples
     Note (you can use the function lfilter from scipy.signal)
     """
-    #optional axis value in lfilter?
+    # optional axis value in lfilter?
     return scipy.signal.lfilter([1, -p], [1], input)
 
 
@@ -112,7 +114,10 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
+    # noinspection PyUnresolvedReferences
     hamWin = signal.hamming(input.shape[1], sym=0)
+
+    return input * hamWin
 
 
 def powerSpectrum(input, nfft):
@@ -127,6 +132,7 @@ def powerSpectrum(input, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
+
 
 def logMelSpectrum(input, samplingrate):
     """
@@ -143,6 +149,7 @@ def logMelSpectrum(input, samplingrate):
           nmelfilters
     """
 
+
 def cepstrum(input, nceps):
     """
     Calulates Cepstral coefficients from mel spectrum applying Discrete Cosine Transform
@@ -155,6 +162,7 @@ def cepstrum(input, nceps):
         array of Cepstral coefficients [N x nceps]
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
+
 
 def dtw(x, y, dist):
     """Dynamic Time Warping.
@@ -172,6 +180,7 @@ def dtw(x, y, dist):
 
     Note that you only need to define the first output for this exercise.
     """
+
 
 if __name__ == "__main__":
     # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
