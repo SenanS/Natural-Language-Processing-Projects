@@ -71,8 +71,8 @@ def enframe(samples, winlen, winshift):
     """
     frames = samples[0:winlen].reshape((1, winlen))
 
-    for i in range(winlen - winshift, samples.shape[0] - winlen, winlen - winshift):
-        frames = np.vstack((frames, samples[i:i + winlen].reshape((1, winlen))))
+    for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
+        frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
     return frames
 
 
@@ -81,10 +81,10 @@ def compare(frames1, frames2):
         for j in range(frames1.shape[1]):
             if frames1[i][j] != frames2[i][j]:
                 print("Not the same!")
-
+    
     print("Same!")
 
-
+    
 def preemp(input, p=0.97):
     """
     Pre-emphasis filter.
@@ -114,7 +114,6 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
-    # noinspection PyUnresolvedReferences
     hamWin = signal.hamming(input.shape[1], sym=0)
 
     return input * hamWin
@@ -133,7 +132,6 @@ def powerSpectrum(input, nfft):
     Note: you can use the function fft from scipy.fftpack
     """
 
-
 def logMelSpectrum(input, samplingrate):
     """
     Calculates the log output of a Mel filterbank when the input is the power spectrum
@@ -149,7 +147,6 @@ def logMelSpectrum(input, samplingrate):
           nmelfilters
     """
 
-
 def cepstrum(input, nceps):
     """
     Calulates Cepstral coefficients from mel spectrum applying Discrete Cosine Transform
@@ -162,7 +159,6 @@ def cepstrum(input, nceps):
         array of Cepstral coefficients [N x nceps]
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
-
 
 def dtw(x, y, dist):
     """Dynamic Time Warping.
@@ -181,7 +177,6 @@ def dtw(x, y, dist):
     Note that you only need to define the first output for this exercise.
     """
 
-
 if __name__ == "__main__":
     # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
     example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
@@ -197,5 +192,8 @@ if __name__ == "__main__":
     test = enframe(example['samples'], 400, 200)
     print(test)
     print("Frames shape: " + str(test.shape))
+
     plt.pcolormesh(test.T)
+    plt.show()
+    plt.pcolormesh(example['frames'].T)
     plt.show()
