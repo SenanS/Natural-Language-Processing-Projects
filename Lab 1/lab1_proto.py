@@ -66,8 +66,8 @@ def enframe(samples, winlen, winshift):
     """
     frames = samples[0:winlen].reshape((1, winlen))
 
-    for i in range(winlen-winshift, samples.shape[0], winlen-winshift):
-        frames = np.vstack((frames, samples[i:i+winlen].reshape(1, winlen)))
+    for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
+        frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
     return frames
 
     
@@ -168,5 +168,8 @@ if __name__ == "__main__":
     # print(example['samples'])
     print("Samples shape: " + str(example['samples'].shape))
     print("Sampling rate: " + str(example['samplingrate']))
-    test = enframe(example['samples'], 20, 10)
+
+    # 20000 * 0.02 = 400
+    # 20000 * 0.01 = 200
+    test = enframe(example['samples'], 400, 200)
     print(test)
