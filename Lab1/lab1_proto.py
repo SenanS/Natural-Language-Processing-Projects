@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import scipy.signal
-from Lab1.lab1_tools import *
+from lab1_tools import *
 
 
 # DT2119, Lab1 Feature Extraction
@@ -82,6 +82,7 @@ def compare(frames1, frames2):
         for j in range(frames1.shape[1]):
             if frames1[i][j] != frames2[i][j]:
                 print("Not the same!")
+                return
     
     print("Same!")
 
@@ -132,6 +133,10 @@ def powerSpectrum(input, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
+    # discrete fourier transform using scipy: 
+    fft = scipy.fftpack.fft(input, nfft)
+    # square: 
+    return np.square(np.abs(fft))
 
 def logMelSpectrum(input, samplingrate):
     """
@@ -164,6 +169,11 @@ def cepstrum(input, nceps):
         array of Cepstral coefficients [N x nceps]
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
+    # "Return the Discrete Cosine Transform of arbitrary type sequence x." :
+    dct = scipy.fftpack.realtransforms.dct(input)
+    # Get the correct number of output cepstra coefficients:
+    return dct[:, 0:nceps]
+
 
 def dtw(x, y, dist):
     """Dynamic Time Warping.
@@ -193,7 +203,7 @@ if __name__ == "__main__":
     # 20000 * 0.01 = 200
     frames_test = enframe(example['samples'], 400, 200)
 
-    # testing if frames is correct:
+    # Testing if correct:
     print("enframe")
     compare(frames_test, example['frames'])
     plt.pcolormesh(frames_test.T)
@@ -223,3 +233,35 @@ if __name__ == "__main__":
     plt.pcolormesh(example['windowed'].T)
     plt.show()
 
+    # Power spectrum:
+    spec_test = powerSpectrum(hamming_test, 512)
+    
+    # Testing if correct:
+    print("Power Spectrum")
+    compare(spec_test, example['spec'])
+    plt.pcolormesh(spec_test.T)
+    plt.show()
+    plt.pcolormesh(example['spec'].T)
+    plt.show()
+
+    # Mel-filterbank:
+    mel_test = logMelSpectrum(spec_test, example['samplingrate'])
+
+    # Testing if correct:
+    print("Log Mel Spectrum")
+    compare(mel_test, example['mspec'])
+    plt.pcolormesh(mel_test.T)
+    plt.show()
+    plt.pcolormesh(example['mspec'].T)
+    plt.show()
+
+    # Cepstrals:
+    cepstrals_test = cepstrum(mel_test, 13)
+
+    # Testing if correct:
+    print("Cepstrals")
+    compare(cepstrals_test, example['mfcc'])
+    plt.pcolormesh(cepstrals_test.T)
+    plt.show()
+    plt.pcolormesh(example['mfcc'].T)
+    plt.show()
