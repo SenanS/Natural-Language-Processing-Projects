@@ -9,6 +9,8 @@ from lab1_tools import *
 # DT2119, Lab1 Feature Extraction
 
 # Function given by the exercise ----------------------------------
+from Lab1.lab1_tools import lifter
+
 
 def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):
     """Computes Mel Filterbank features.
@@ -24,14 +26,13 @@ def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplin
     Returns:
         N x nfilters array with mel filterbank features (see trfbank for nfilters)
     """
-    """
     frames = enframe(samples, winlen, winshift)
     preemph = preemp(frames, preempcoeff)
     windowed = windowing(preemph)
     spec = powerSpectrum(windowed, nfft)
     return logMelSpectrum(spec, samplingrate)
-    """
-    return None
+
+    # return None
 
 
 def mfcc(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, nceps=13, samplingrate=20000, liftercoeff=22):
@@ -50,12 +51,12 @@ def mfcc(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, nceps=13
     Returns:
         N x nceps array with lifetered MFCC coefficients
     """
-    """
+
     mspecs = mspec(samples, winlen, winshift, preempcoeff, nfft, samplingrate)
     ceps = cepstrum(mspecs, nceps)
     return lifter(ceps, liftercoeff)
-    """
-    return None
+
+    # return None
 
 
 # Functions to be implemented ----------------------------------
@@ -125,10 +126,12 @@ def windowing(input):
 
     hamming_window = scipy.signal.hamming(input.shape[1], sym=0)
 
-    # plt.title("Hamming Window plot")
-    # plt.plot(hamming_window)
-    # plt.show()
-
+    plt.title("Hamming Window plot")
+    plt.plot(hamming_window)
+    plt.show()
+    # Sacrifices differences between comparable strength components with similar frequencies
+    # to highlight disparate strength components with dissimilar frequencies.
+    #(Reduces noise of each speech sample by averaging the signal by frequency)
     return input * hamming_window
 
 
@@ -166,6 +169,12 @@ def logMelSpectrum(input, samplingrate):
 
     #tranposed filter bank
     filter_bank = trfbank(samplingrate, input.shape[1]).T
+
+    plt.title("Filters")
+    plt.plot(filter_bank)
+    plt.show()
+    #Inverse exponential trend to filters
+
     #Getting the log of the dot product of the input and filter bank
     return np.log(np.dot(input, filter_bank))
 
@@ -208,6 +217,7 @@ if __name__ == "__main__":
     # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
     # example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
     example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
+    data = np.load('lab1_data.npz', allow_pickle=True)['data']
 
     # Frames:
     print("Sampling rate: " + str(example['samplingrate']))
@@ -288,4 +298,23 @@ if __name__ == "__main__":
     plt.show()
     plt.title("Cepstrals Example")
     plt.pcolormesh(example['mfcc'].T)
+    plt.show()
+
+    # LMFCC:
+    lifter_test = lifter(cepstrals_test, 22)
+
+    # Testing if correct:
+    print("Lifter")
+    plt.title("Lifter Function")
+    compare(lifter_test, example['lmfcc'])
+    plt.pcolormesh(lifter_test.T)
+    plt.show()
+    plt.title("Lifter Example")
+    plt.pcolormesh(example['lmfcc'].T)
+    plt.show()
+
+    #Gets the LMFCC for the 0th entry in data
+    computed_data = mfcc(data[0]['samples'])
+    plt.title("Data - Lifter")
+    plt.pcolormesh(computed_data.T)
     plt.show()
