@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+import scipy.fftpack
 import scipy.signal
 from lab1_tools import *
 
@@ -100,7 +101,10 @@ def preemp(input, p=0.97):
         output: array of pre-emphasised speech samples
     Note (you can use the function lfilter from scipy.signal)
     """
-    # optional axis value in lfilter?
+
+    #Digitally filter the input sequence (smoothes a noisy signal)
+    #use a = [1] for default a value & b = [1, 0.97] to use for a preemphasis filter coeff of 0.97.
+
     return scipy.signal.lfilter([1, -p], [1], input)
 
 
@@ -116,7 +120,14 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
+
+    #Applying hamming window to each frame for spectral analysis
+
     hamming_window = scipy.signal.hamming(input.shape[1], sym=0)
+
+    # plt.title("Hamming Window plot")
+    # plt.plot(hamming_window)
+    # plt.show()
 
     return input * hamming_window
 
@@ -133,9 +144,9 @@ def powerSpectrum(input, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
-    # discrete fourier transform using scipy: 
+    # discrete fourier transform using scipy:
     fft = scipy.fftpack.fft(input, nfft)
-    # square: 
+    # square:
     return np.square(np.abs(fft))
 
 def logMelSpectrum(input, samplingrate):
@@ -152,6 +163,7 @@ def logMelSpectrum(input, samplingrate):
     Note: use the trfbank function provided in lab1_tools.py to calculate the filterbank shapes and
           nmelfilters
     """
+
     #tranposed filter bank
     filter_bank = trfbank(samplingrate, input.shape[1]).T
     #Getting the log of the dot product of the input and filter bank
@@ -206,8 +218,10 @@ if __name__ == "__main__":
     # Testing if correct:
     print("enframe")
     compare(frames_test, example['frames'])
+    plt.title("Enframe Function")
     plt.pcolormesh(frames_test.T)
     plt.show()
+    plt.title("Enframe Example")
     plt.pcolormesh(example['frames'].T)
     plt.show()
 
@@ -217,8 +231,10 @@ if __name__ == "__main__":
     # Testing if correct:
     print("Preemph")
     compare(preemp_test, example['preemph'])
+    plt.title("Pre-emphasis Function")
     plt.pcolormesh(preemp_test.T)
     plt.show()
+    plt.title("Pre-emphasis Example")
     plt.pcolormesh(example['preemph'].T)
     plt.show()
 
@@ -227,9 +243,11 @@ if __name__ == "__main__":
 
     # Testing if correct:
     print("Hamming")
+    plt.title("Hamming Function")
     compare(hamming_test, example['windowed'])
     plt.pcolormesh(hamming_test.T)
     plt.show()
+    plt.title("Hamming Example")
     plt.pcolormesh(example['windowed'].T)
     plt.show()
 
@@ -239,8 +257,10 @@ if __name__ == "__main__":
     # Testing if correct:
     print("Power Spectrum")
     compare(spec_test, example['spec'])
+    plt.title("Power Spectrum Function")
     plt.pcolormesh(spec_test.T)
     plt.show()
+    plt.title("Power Spectrum Example")
     plt.pcolormesh(example['spec'].T)
     plt.show()
 
@@ -249,9 +269,11 @@ if __name__ == "__main__":
 
     # Testing if correct:
     print("Log Mel Spectrum")
+    plt.title("Log Mel Spectrum Function")
     compare(mel_test, example['mspec'])
     plt.pcolormesh(mel_test.T)
     plt.show()
+    plt.title("Log Mel Spectrum Example")
     plt.pcolormesh(example['mspec'].T)
     plt.show()
 
@@ -260,8 +282,10 @@ if __name__ == "__main__":
 
     # Testing if correct:
     print("Cepstrals")
+    plt.title("Cepstrals Function")
     compare(cepstrals_test, example['mfcc'])
     plt.pcolormesh(cepstrals_test.T)
     plt.show()
+    plt.title("Cepstrals Example")
     plt.pcolormesh(example['mfcc'].T)
     plt.show()
