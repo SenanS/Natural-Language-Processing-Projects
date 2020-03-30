@@ -126,9 +126,9 @@ def windowing(input):
 
     hamming_window = scipy.signal.hamming(input.shape[1], sym=0)
 
-    plt.title("Hamming Window plot")
-    plt.plot(hamming_window)
-    plt.show()
+    # plt.title("Hamming Window plot")
+    # plt.plot(hamming_window)
+    # plt.show()
     # Sacrifices differences between comparable strength components with similar frequencies
     # to highlight disparate strength components with dissimilar frequencies.
     #(Reduces noise of each speech sample by averaging the signal by frequency)
@@ -170,9 +170,9 @@ def logMelSpectrum(input, samplingrate):
     #tranposed filter bank
     filter_bank = trfbank(samplingrate, input.shape[1]).T
 
-    plt.title("Filters")
-    plt.plot(filter_bank)
-    plt.show()
+    # plt.title("Filters")
+    # plt.plot(filter_bank)
+    # plt.show()
     #Inverse exponential trend to filters
 
     #Getting the log of the dot product of the input and filter bank
@@ -314,7 +314,28 @@ if __name__ == "__main__":
     plt.show()
 
     #Gets the LMFCC for the 0th entry in data
-    computed_data = mfcc(data[0]['samples'])
+    MFCC_concat_array = mfcc(data[0]['samples'])
+    MSPEC_concat_array = mspec(data[0]['samples'])
     plt.title("Data - Lifter")
-    plt.pcolormesh(computed_data.T)
+    plt.pcolormesh(MFCC_concat_array)
     plt.show()
+
+    #Section 5 - Concatenation & Correlation
+    for i in range(1, 44):
+        MFCC_computed_data = mfcc(data[i]['samples'])
+        MFCC_concat_array = np.concatenate((MFCC_concat_array, MFCC_computed_data), axis=0)
+
+        MSPEC_computed_data = mspec(data[i]['samples'])
+        MSPEC_concat_array = np.concatenate((MSPEC_concat_array, MSPEC_computed_data), axis=0)
+
+    MFCC_correlation_coeff = np.corrcoef(MFCC_concat_array, rowvar=False)
+    MSPEC_correlation_coeff = np.corrcoef(MSPEC_concat_array, rowvar=False)
+
+    plt.pcolormesh(MFCC_correlation_coeff)
+    plt.title("MFCC correlation")
+    plt.show()
+    plt.pcolormesh(MSPEC_correlation_coeff)
+    plt.title("MSPEC correlation")
+    plt.show()
+
+    print("test")
