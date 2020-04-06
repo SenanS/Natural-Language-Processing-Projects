@@ -3,13 +3,16 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.fftpack
 import scipy.signal
+from sklearn.mixture import GaussianMixture
 from lab1_tools import *
 
 
 # DT2119, Lab1 Feature Extraction
 
 # Function given by the exercise ----------------------------------
-from Lab1.lab1_tools import lifter
+# idk why, but this needs to be commented out if I want to run the code, the import from above:
+# from lab1_tools import *, does this for me I guess?
+# from Lab1.lab1_tools import lifter
 
 
 def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):
@@ -32,8 +35,6 @@ def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplin
     spec = powerSpectrum(windowed, nfft)
     return logMelSpectrum(spec, samplingrate)
 
-    # return None
-
 
 def mfcc(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, nceps=13, samplingrate=20000, liftercoeff=22):
     """Computes Mel Frequency Cepstrum Coefficients.
@@ -55,8 +56,6 @@ def mfcc(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, nceps=13
     mspecs = mspec(samples, winlen, winshift, preempcoeff, nfft, samplingrate)
     ceps = cepstrum(mspecs, nceps)
     return lifter(ceps, liftercoeff)
-
-    # return None
 
 
 # Functions to be implemented ----------------------------------
@@ -358,3 +357,13 @@ if __name__ == "__main__":
     plt.show()
 
     print("test")
+
+
+    # Section 6 - Gaussian mixture model: 
+    components = [4, 8, 16, 32]
+
+    for comp in components:
+        # use sk learns GMM to create gaussian mixture model:
+        gmm = GaussianMixture(comp, covariance_type='diag', max_iter=1000, verbose=1)
+        
+        gmm.fit()
