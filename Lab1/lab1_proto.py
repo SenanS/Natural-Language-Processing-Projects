@@ -72,14 +72,23 @@ def enframe(samples, winlen, winshift):
         numpy array [N x winlen], where N is the number of windows that fit
         in the input signal
     """
-    frames = samples[0:winlen].reshape((1, winlen))
 
+    # first frame:
+    frames = samples[0:winlen].reshape((1, winlen))
+    # As we created the first frame, we start at winlen-winshift, go to final sample -1 winlen, and increase our i with winlen - winshift
     for i in range(winlen-winshift, samples.shape[0] - winlen, winlen-winshift):
+        # create new frame:
         frames = np.vstack((frames, samples[i:i+winlen].reshape((1, winlen))))
     return frames
 
 
 def compare(frames1, frames2):
+    """
+    Short bit of code to compare two 2d arrays with each other,
+
+    If one of the arrays differs, the function prints "Not the same!"
+    else prints "Same!"
+    """
     for i in range(frames1.shape[0]):
         for j in range(frames1.shape[1]):
             if frames1[i][j] != frames2[i][j]:
@@ -103,8 +112,8 @@ def preemp(input, p=0.97):
     Note (you can use the function lfilter from scipy.signal)
     """
 
-    #Digitally filter the input sequence (smoothes a noisy signal)
-    #use a = [1] for default a value & b = [1, 0.97] to use for a preemphasis filter coeff of 0.97.
+    # Digitally filter the input sequence (smoothes a noisy signal)
+    # use a = [1] for default a value & b = [1, 0.97] to use for a preemphasis filter coeff of 0.97.
 
     return scipy.signal.lfilter([1, -p], [1], input)
 
@@ -147,6 +156,9 @@ def powerSpectrum(input, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
+    # I liked wolfram alpha's description of what a power spectrum is as a short explanation (https://mathworld.wolfram.com/PowerSpectrum.html):
+    # "For a given signal, the power spectrum gives a plot of the portion of a signal's power (energy per unit time) falling within given frequency bins"
+
     # discrete fourier transform using scipy:
     fft = scipy.fftpack.fft(input, nfft)
     # square:
@@ -190,6 +202,13 @@ def cepstrum(input, nceps):
         array of Cepstral coefficients [N x nceps]
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
+    # Explanation from wikipedia: (https://en.wikipedia.org/wiki/Cepstrum)
+    # "It serves as a tool to investigate periodic structures within frequency spectra. 
+    # Such effects are related i.e. to noticeable echos/reflections in the signal or to the 
+    # occurence of harmonic frequencies (partials, overtones)."
+    # +
+    # "Mathematically it deals with the problem of deconvolution of signals in the frequency space"
+
     # "Return the Discrete Cosine Transform of arbitrary type sequence x." :
     dct = scipy.fftpack.realtransforms.dct(input)
     # Get the correct number of output cepstra coefficients:
