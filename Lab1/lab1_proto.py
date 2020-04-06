@@ -4,6 +4,8 @@ import scipy
 import scipy.fftpack
 import scipy.signal
 from sklearn.mixture import GaussianMixture
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial import distance
 from lab1_tools import *
 
 
@@ -12,7 +14,7 @@ from lab1_tools import *
 # Function given by the exercise ----------------------------------
 # idk why, but this needs to be commented out if I want to run the code, the import from above:
 # from lab1_tools import *, does this for me I guess?
-# from Lab1.lab1_tools import lifter
+from Lab1.lab1_tools import *
 
 
 def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):
@@ -134,12 +136,14 @@ def windowing(input):
 
     hamming_window = scipy.signal.hamming(input.shape[1], sym=0)
 
+    #PLOTS THE HAMMING WINDOW
     # plt.title("Hamming Window plot")
     # plt.plot(hamming_window)
     # plt.show()
     # Sacrifices differences between comparable strength components with similar frequencies
     # to highlight disparate strength components with dissimilar frequencies.
     #(Reduces noise of each speech sample by averaging the signal by frequency)
+
     return input * hamming_window
 
 
@@ -181,6 +185,7 @@ def logMelSpectrum(input, samplingrate):
     #tranposed filter bank
     filter_bank = trfbank(samplingrate, input.shape[1]).T
 
+    #PLOTS FILTERS
     # plt.title("Filters")
     # plt.plot(filter_bank)
     # plt.show()
@@ -219,7 +224,7 @@ def dtw(x, y, dist):
 
     Args:
         x, y: arrays of size NxD and MxD respectively, where D is the dimensionality
-              and N, M are the respective lenghts of the sequences
+              and N, M are the respective lengths of the sequences
         dist: distance function (can be used in the code as dist(x[i], y[j]))
 
     Outputs:
@@ -230,6 +235,23 @@ def dtw(x, y, dist):
 
     Note that you only need to define the first output for this exercise.
     """
+    N = x.shape[0]
+    M = y.shape[0]
+    LD = np.zeros((N, M))
+    AD = np.zeros((N, M))
+
+    for i in range(N):
+        for j in range(M):
+            LD[i, j] = dist(x[i] - y[j])
+
+    for i in range(N):
+        for j in range(M):
+            AD[i, j] = LD[i, j] + min(AD[i - 1, j - 1], AD[i - 1, j], AD[i, j - 1])
+
+    d = (AD[N - 1, M - 1]) / (N + M)
+
+    # return d, LD, AD
+    return d
 
 if __name__ == "__main__":
     example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
@@ -336,10 +358,16 @@ if __name__ == "__main__":
     plt.pcolormesh(MFCC_concat_array)
     plt.show()
 
-    #Section 5 - Concatenation & Correlation
+
+    # Section 5 - Concatenation & Correlation
+
+    # Contains the 44 processed features
+    data_features = []
+    for j in range(44):
+        data_features.append(mfcc(data[j]['samples']))
+
     for i in range(1, 44):
-        MFCC_computed_data = mfcc(data[i]['samples'])
-        MFCC_concat_array = np.concatenate((MFCC_concat_array, MFCC_computed_data), axis=0)
+        MFCC_concat_array = np.concatenate((MFCC_concat_array, data_features[i]), axis=0)
 
         MSPEC_computed_data = mspec(data[i]['samples'])
         MSPEC_concat_array = np.concatenate((MSPEC_concat_array, MSPEC_computed_data), axis=0)
@@ -354,7 +382,7 @@ if __name__ == "__main__":
     plt.title("MSPEC correlation")
     plt.show()
 
-    print("test")
+
 
     # Section 6 - Gaussian mixture model: 
     components = [4, 8, 16, 32]
@@ -363,24 +391,33 @@ if __name__ == "__main__":
         # use sk learns GMM to create gaussian mixture model:
         gmm = GaussianMixture(comp, verbose=1)
 
-        # Get all training mfcc's:
-        all_mfccs = []
-        for i in range(data.size):
-            sample = data[i]['samples']
-            single_mfcc = mfcc(sample)
-            all_mfccs.append(single_mfcc)
+
+        # #I think all of this (the following 11 lines) is done in section 5
+        # # Get all training mfcc's:
+        # all_mfccs = []
+        # for i in range(data.size):
+        #     sample = data[i]['samples']
+        #     single_mfcc = mfcc(sample)
+        #     all_mfccs.append(single_mfcc)
+        #
+        # # Get first mfcc and make it an array:
+        # features = np.matrix(all_mfccs[0])
+        # # Concatenate all other mfccs
+        # for i in range(1, len(all_mfccs)):
+        #     features = np.concatenate((features, all_mfccs[i]))
+
 
         # Get first mfcc and make it an array:
-        features = np.matrix(all_mfccs[0])
+        features = np.matrix(data_features[0])
         # Concatenate all other mfccs
-        for i in range(1, len(all_mfccs)):
-            features = np.concatenate((features, all_mfccs[i]))
+        for i in range(1, len(data_features)):
+            features = np.concatenate((features, data_features[i]))
 
         # fit using all data:
         gmm.fit(features)
 
         # These are utterances of the same word; "seven"
-        sevens = [all_mfccs[16], all_mfccs[17], all_mfccs[38], all_mfccs[39]]
+        sevens = [data_features[16], data_features[17], data_features[38], data_features[39]]
 
         post = []
         for seven in sevens:
@@ -390,3 +427,25 @@ if __name__ == "__main__":
             plt.pcolormesh(post[i].T)
             plt.title("GMM posterior for utterance seven, comp = " + str(comp) + " post nr = " + str(i))
             plt.show()
+
+
+    # Section 7 - Utterance Comparison
+
+    distances = np.zeros((44, 44))
+
+    for i in range(44):
+        print(i)
+        for j in range(44):
+            # or np.linalg.norm, distance.Euclidean
+            distances[i, j] = dtw(data_features[i], data_features[j], np.linalg.norm)
+
+    plt.title("Distances between utterances")
+    plt.pcolormesh(distances)
+    plt.show()
+
+    labels = tidigit2labels(data)
+    dendrogram(linkage(distances, method="complete"), labels=labels)
+    plt.show()
+
+
+    print("done")
