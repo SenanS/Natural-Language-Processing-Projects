@@ -232,8 +232,6 @@ def dtw(x, y, dist):
     """
 
 if __name__ == "__main__":
-    # data = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_data.npz', allow_pickle=True)['data']
-    # example = np.load('/home/cornelis/KTH/speech_recog/lab1/lab1_example.npz', allow_pickle=True)['example'].item()
     example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
     data = np.load('lab1_data.npz', allow_pickle=True)['data']
 
@@ -358,12 +356,37 @@ if __name__ == "__main__":
 
     print("test")
 
-
     # Section 6 - Gaussian mixture model: 
     components = [4, 8, 16, 32]
 
     for comp in components:
         # use sk learns GMM to create gaussian mixture model:
-        gmm = GaussianMixture(comp, covariance_type='diag', max_iter=1000, verbose=1)
-        
-        gmm.fit()
+        gmm = GaussianMixture(comp, verbose=1)
+
+        # Get all training mfcc's:
+        all_mfccs = []
+        for i in range(data.size):
+            sample = data[i]['samples']
+            single_mfcc = mfcc(sample)
+            all_mfccs.append(single_mfcc)
+
+        # Get first mfcc and make it an array:
+        features = np.matrix(all_mfccs[0])
+        # Concatenate all other mfccs
+        for i in range(1, len(all_mfccs)):
+            features = np.concatenate((features, all_mfccs[i]))
+
+        # fit using all data:
+        gmm.fit(features)
+
+        # These are utterances of the same word; "seven"
+        sevens = [all_mfccs[16], all_mfccs[17], all_mfccs[38], all_mfccs[39]]
+
+        post = []
+        for seven in sevens:
+            post.append(gmm.predict_proba(seven))
+
+        for i in range(4):
+            plt.pcolormesh(post[i].T)
+            plt.title("GMM posterior for utterance seven, comp = " + str(comp) + " post nr = " + str(i))
+            plt.show()
