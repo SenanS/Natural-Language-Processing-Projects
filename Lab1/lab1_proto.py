@@ -444,8 +444,8 @@ if __name__ == "__main__":
     plt.show()
 
     labels = tidigit2labels(data)
-    dendrogram(linkage(distances, method="complete"), labels=labels)
+    link = linkage(distances, method="complete")
+    dendrogram(link, labels=labels)
     plt.show()
 
 
-    print("done")
