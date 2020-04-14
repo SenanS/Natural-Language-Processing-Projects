@@ -14,7 +14,7 @@ from lab1_tools import *
 # Function given by the exercise ----------------------------------
 # idk why, but this needs to be commented out if I want to run the code, the import from above:
 # from lab1_tools import *, does this for me I guess?
-from Lab1.lab1_tools import *
+# from Lab1.lab1_tools import *
 
 
 def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):
