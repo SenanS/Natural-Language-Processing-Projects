@@ -29,6 +29,24 @@ def concatTwoHMMs(hmm1, hmm2):
 
     See also: the concatenating_hmms.pdf document in the lab package
     """
+    size1 = np.size(hmm1['startprob']) - 1
+    size2 = np.size(hmm2['startprob']) - 1
+
+    concat_hmm = {}
+    concat_hmm['startprob'] = hmm2['startprob'] * hmm1['startprob'][size1]
+    concat_hmm['startprob'] = np.concatenate((hmm1['startprob'][0:size1], concat_hmm['startprob']))
+
+    product = np.reshape(hmm1['transmat'][0:-1, -1], (size1, 1)) @ np.reshape(hmm2['startprob'], (1, size2+1))
+    concat_hmm['transmat'] =  np.concatenate((hmm1['transmat'][0:-1, 0:-1], product), axis=1)
+
+    concat = np.concatenate((np.zeros([size2+1, size2]), hmm2['transmat']), axis=1)
+    concat_hmm['transmat'] = np.concatenate((hmm3['transmat'], concat), axis=0)
+
+    concat_hmm['means'] = np.concatenate((hmm1['means'], hmm2['means']), axis=0)
+    concat_hmm['covars'] = np.concatenate((hmm1['covars'], hmm2['covars']), axis=0)
+    
+    return concat_hmm
+
 
 # this is already implemented, but based on concat2HMMs() above
 def concatHMMs(hmmmodels, namelist):
