@@ -9,12 +9,12 @@ from scipy.spatial import distance
 from lab1_tools import *
 
 
-# DT2119, Lab1 Feature Extraction
+# DT2119, Lab 1 Feature Extraction
 
 # Function given by the exercise ----------------------------------
 # idk why, but this needs to be commented out if I want to run the code, the import from above:
 # from lab1_tools import *, does this for me I guess?
-# from Lab1.lab1_tools import *
+# from Lab 1.lab1_tools import *
 
 
 def mspec(samples, winlen=400, winshift=200, preempcoeff=0.97, nfft=512, samplingrate=20000):

@@ -42,12 +42,12 @@ def concatTwoHMMs(hmm1, hmm2):
     mul = np.reshape(hmm1['transmat'][0:-1, -1], (size1, 1)) @ np.reshape(hmm2['startprob'], (1, size2+1))
     concat_hmm['transmat'] =  np.concatenate((hmm1['transmat'][0:-1, 0:-1], mul), axis=1)
 
-    tmp = np.concatenate((np.zeros([size2+1,size1]), hmm2['transmat']), axis=1)
+    tmp = np.concatenate((np.zeros([size2+1, size1]), hmm2['transmat']), axis=1)
     concat_hmm['transmat'] = np.concatenate((concat_hmm['transmat'], tmp), axis=0)
 
     concat_hmm['means'] = np.concatenate((hmm1['means'], hmm2['means']), axis=0)
     concat_hmm['covars'] = np.concatenate((hmm1['covars'], hmm2['covars']), axis=0)
-    
+
     return concat_hmm
 
 
@@ -83,9 +83,10 @@ def concatHMMs(hmmmodels, namelist):
        wordHMMs['o'] = concatHMMs(phoneHMMs, ['sil', 'ow', 'sil'])
     """
     concat = hmmmodels[namelist[0]]
-    for idx in range(1,len(namelist)):
+    for idx in range(1, len(namelist)):
         concat = concatTwoHMMs(concat, hmmmodels[namelist[idx]])
     return concat
+
 
 
 def gmmloglik(log_emlik, weights):
@@ -117,8 +118,8 @@ def forward(log_emlik, log_startprob, log_transmat):
 
     # Create alpha return matrix, populate with n=0 formula result.
     log_alpha = np.zeros((N, M))
-    log_alpha[0][:] = np.add(log_startprob.T, log_emlik[0][:])
-    # TODO: check if start needs to be transposed (alpha).
+    log_alpha[0][:] = np.add(log_startprob, log_emlik[0][:])
+    # TODO: check if log_startprob needs to be transposed (alpha).
 
     # For all other n, populate alpha with regular formula result.
     for n in range(1, N):
@@ -177,7 +178,7 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
 
     # Populate viterbi matrix with with n=0 formula result.
     log_viterbi[0][:] = np.add(log_startprob.T, log_emlik[0][:])
-    # TODO: check if start needs to be transposed (viterbi).
+    # TODO: check if log_startprob needs to be transposed (viterbi).
 
     # For all other n, populate viterbi with regular recursive formula result.
     for n in range(1, N):
@@ -186,13 +187,16 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
             log_viterbi[n][j] = log_emlik[n][j] + np.max(log_viterbi[n - 1][:] - log_transmat[:][j])
             backtrack_matrix[n][j] = np.argmax(log_viterbi[n - 1][:] - log_transmat[:][j])
 
-    viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
+    # Setup return variables, depending on forceFinalState.
+    if forceFinalState:
+        viterbi_path[N - 1] = M - 1
+    else:
+        viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
     viterbi_loglik = log_viterbi[N - 1][viterbi_path[N - 1]]
 
     # Go through each column of the matrix backwards to find the route of the highest likelihood.
     for i in range(N - 2, 1, -1):
         viterbi_path[i] = backtrack_matrix[i + 1][viterbi_path[i + 1]]
-
 
     return viterbi_loglik, viterbi_path
 
@@ -242,21 +246,43 @@ if __name__ == "__main__":
     for digit in prondict.keys():
         isolated[digit] = ['sil'] + prondict[digit] + ['sil']
 
-
     wordHMMs = {}
-    wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
+    # wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
+    for digit in isolated.keys():
+        wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
     print(list(wordHMMs['o'].keys()))
+
 
     example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
 
-    o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'], wordHMMs['o']['covars'])
+    o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
+                                                                  wordHMMs['o']['covars'])
 
     print("Testing if likelihood is correct: ")
     np.testing.assert_almost_equal(o_obsloglik, example['obsloglik'], 6)
     print("Likelihood is correct.")
 
     # plotting likelihood functions:
+    plt.title("Computed \"o\" obsloglik")
     plt.pcolormesh(o_obsloglik.T)
     plt.show()
+    plt.title("Example \"o\" obsloglik")
     plt.pcolormesh(example['obsloglik'].T)
     plt.show()
+
+    # Testing Forward function
+    # TODO: fix the fact that startprob matrix is 10 wide and emissions is 9 wide
+    # forward_probability = forward(o_obsloglik, wordHMMs['o']['startprob'], wordHMMs['o']['transmat'])
+    # print("Testing if forward probability is ≃ to example: ")
+    # np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
+    # print("Likelihood is correct.")
+    #
+    # # plotting forward functions:
+    # plt.title("Computed \"o\" forward probability")
+    # plt.pcolormesh(forward_probability.T)
+    # plt.show()
+    # plt.title("Example \"o\" forward probability")
+    # plt.pcolormesh(example['logalpha'].T)
+    # plt.show()
+
+
