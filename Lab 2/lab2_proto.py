@@ -1,5 +1,5 @@
 import numpy as np
-from tools2 import *
+import lab2_tools.py
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -110,6 +110,20 @@ def forward(log_emlik, log_startprob, log_transmat):
         forward_prob: NxM array of forward log probabilities for each of the M states in the model
     """
 
+    N, M = log_emlik.shape
+
+    # Create alpha return matrix, populate with n=0 formula result.
+    log_alpha = np.zeros((N, M))
+    log_alpha[0][:] = np.add(log_startprob.T, log_emlik[0][:])
+
+    # For all other n, populate alpha with regular formula result.
+    for n in range(1, N):
+        for j in range(M):
+            log_alpha[n][j] = log_emlik[n][j] + lab2_tools.logsumexp(log_alpha[n - 1][:] + log_transmat[:][j])
+
+    return log_alpha
+
+
 def backward(log_emlik, log_startprob, log_transmat):
     """Backward (beta) probabilities in log domain.
 
@@ -121,6 +135,20 @@ def backward(log_emlik, log_startprob, log_transmat):
     Output:
         backward_prob: NxM array of backward log probabilities for each of the M states in the model
     """
+
+    N, M = log_emlik.shape
+
+    # Create zeroed beta return matrix.
+    log_beta = np.zeros((N, M))
+
+    #For all other n, populate beta with regular formula result.
+    #Start at N-1 &, in increments of -1, finish at 0.
+    for n in range(N - 1, -1, -1):
+        for j in range(M):
+            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1][:] + log_emlik[n + 1][j] + log_transmat[:][j])
+
+    return log_beta
+
 
 def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     """Viterbi path.
