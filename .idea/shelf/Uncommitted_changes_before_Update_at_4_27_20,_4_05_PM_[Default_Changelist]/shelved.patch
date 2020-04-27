@@ -1,0 +1,77 @@
+Index: Lab 2/lab2_proto.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\nimport lab2_tools.py\n\ndef concatTwoHMMs(hmm1, hmm2):\n    \"\"\" Concatenates 2 HMM models\n\n    Args:\n       hmm1, hmm2: two dictionaries with the following keys:\n           name: phonetic or word symbol corresponding to the model\n           startprob: M+1 array with priori probability of state\n           transmat: (M+1)x(M+1) transition matrix\n           means: MxD array of mean vectors\n           covars: MxD array of variances\n\n    D is the dimension of the feature vectors\n    M is the number of emitting states in each HMM model (could be different for each)\n\n    Output\n       dictionary with the same keys as the input but concatenated models:\n          startprob: K+1 array with priori probability of state\n          transmat: (K+1)x(K+1) transition matrix\n             means: KxD array of mean vectors\n            covars: KxD array of variances\n\n    K is the sum of the number of emitting states from the input models\n   \n    Example:\n       twoHMMs = concatHMMs(phoneHMMs['sil'], phoneHMMs['ow'])\n\n    See also: the concatenating_hmms.pdf document in the lab package\n    \"\"\"\n    size1 = np.size(hmm1['startprob']) - 1\n    size2 = np.size(hmm2['startprob']) - 1\n\n    concat_hmm = {}\n    concat_hmm['startprob'] = hmm2['startprob'] * hmm1['startprob'][size1]\n    concat_hmm['startprob'] = np.concatenate((hmm1['startprob'][0:size1], concat_hmm['startprob']))\n\n    product = np.reshape(hmm1['transmat'][0:-1, -1], (size1, 1)) @ np.reshape(hmm2['startprob'], (1, size2+1))\n    concat_hmm['transmat'] =  np.concatenate((hmm1['transmat'][0:-1, 0:-1], product), axis=1)\n\n    concat = np.concatenate((np.zeros([size2+1, size2]), hmm2['transmat']), axis=1)\n    concat_hmm['transmat'] = np.concatenate((hmm3['transmat'], concat), axis=0)\n\n    concat_hmm['means'] = np.concatenate((hmm1['means'], hmm2['means']), axis=0)\n    concat_hmm['covars'] = np.concatenate((hmm1['covars'], hmm2['covars']), axis=0)\n    \n    return concat_hmm\n\n\n# this is already implemented, but based on concat2HMMs() above\ndef concatHMMs(hmmmodels, namelist):\n    \"\"\" Concatenates HMM models in a left to right manner\n\n    Args:\n       hmmmodels: dictionary of models indexed by model name. \n       hmmmodels[name] is a dictionaries with the following keys:\n           name: phonetic or word symbol corresponding to the model\n           startprob: M+1 array with priori probability of state\n           transmat: (M+1)x(M+1) transition matrix\n           means: MxD array of mean vectors\n           covars: MxD array of variances\n       namelist: list of model names that we want to concatenate\n\n    D is the dimension of the feature vectors\n    M is the number of emitting states in each HMM model (could be\n      different in each model)\n\n    Output\n       combinedhmm: dictionary with the same keys as the input but\n                    combined models:\n         startprob: K+1 array with priori probability of state\n          transmat: (K+1)x(K+1) transition matrix\n             means: KxD array of mean vectors\n            covars: KxD array of variances\n\n    K is the sum of the number of emitting states from the input models\n\n    Example:\n       wordHMMs['o'] = concatHMMs(phoneHMMs, ['sil', 'ow', 'sil'])\n    \"\"\"\n    concat = hmmmodels[namelist[0]]\n    for idx in range(1,len(namelist)):\n        concat = concatTwoHMMs(concat, hmmmodels[namelist[idx]])\n    return concat\n\n\ndef gmmloglik(log_emlik, weights):\n    \"\"\"Log Likelihood for a GMM model based on Multivariate Normal Distribution.\n\n    Args:\n        log_emlik: array like, shape (N, K).\n            contains the log likelihoods for each of N observations and\n            each of K distributions\n        weights:   weight vector for the K components in the mixture\n\n    Output:\n        gmmloglik: scalar, log likelihood of data given the GMM model.\n    \"\"\"\n\ndef forward(log_emlik, log_startprob, log_transmat):\n    \"\"\"Forward (alpha) probabilities in log domain.\n\n    Args:\n        log_emlik: NxM array of emission log likelihoods, N frames, M states\n        log_startprob: log probability to start in state i\n        log_transmat: log transition probability from state i to j\n\n    Output:\n        forward_prob: NxM array of forward log probabilities for each of the M states in the model\n    \"\"\"\n\n    N, M = log_emlik.shape\n\n    # Create alpha return matrix, populate with n=0 formula result.\n    log_alpha = np.zeros((N, M))\n    log_alpha[0][:] = np.add(log_startprob.T, log_emlik[0][:])\n\n    # For all other n, populate alpha with regular formula result.\n    for n in range(1, N):\n        for j in range(M):\n            log_alpha[n][j] = log_emlik[n][j] + lab2_tools.logsumexp(log_alpha[n - 1][:] + log_transmat[:][j])\n\n    return log_alpha\n\n\ndef backward(log_emlik, log_startprob, log_transmat):\n    \"\"\"Backward (beta) probabilities in log domain.\n\n    Args:\n        log_emlik: NxM array of emission log likelihoods, N frames, M states\n        log_startprob: log probability to start in state i\n        log_transmat: transition log probability from state i to j\n\n    Output:\n        backward_prob: NxM array of backward log probabilities for each of the M states in the model\n    \"\"\"\n\n    N, M = log_emlik.shape\n\n    # Create zeroed beta return matrix.\n    log_beta = np.zeros((N, M))\n\n    #For all other n, populate beta with regular formula result.\n    #Start at N-1 &, in increments of -1, finish at 0.\n    for n in range(N - 1, -1, -1):\n        for j in range(M):\n            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1][:] + log_emlik[n + 1][j] + log_transmat[:][j])\n\n    return log_beta\n\n\ndef viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):\n    \"\"\"Viterbi path.\n\n    Args:\n        log_emlik: NxM array of emission log likelihoods, N frames, M states\n        log_startprob: log probability to start in state i\n        log_transmat: transition log probability from state i to j\n        forceFinalState: if True, start backtracking from the final state in\n                  the model, instead of the best state at the last time step\n\n    Output:\n        viterbi_loglik: log likelihood of the best path\n        viterbi_path: best path\n    \"\"\"\n\ndef statePosteriors(log_alpha, log_beta):\n    \"\"\"State posterior (gamma) probabilities in log domain.\n\n    Args:\n        log_alpha: NxM array of log forward (alpha) probabilities\n        log_beta: NxM array of log backward (beta) probabilities\n    where N is the number of frames, and M the number of states\n\n    Output:\n        log_gamma: NxM array of gamma probabilities for each of the M states in the model\n    \"\"\"\n\ndef updateMeanAndVar(X, log_gamma, varianceFloor=5.0):\n    \"\"\" Update Gaussian parameters with diagonal covariance\n\n    Args:\n         X: NxD array of feature vectors\n         log_gamma: NxM state posterior probabilities in log domain\n         varianceFloor: minimum allowed variance scalar\n    were N is the lenght of the observation sequence, D is the\n    dimensionality of the feature vectors and M is the number of\n    states in the model\n\n    Outputs:\n         means: MxD mean vectors for each state\n         covars: MxD covariance (variance) vectors for each state\n    \"\"\"\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Lab 2/lab2_proto.py	(revision 2fdb00546e132d1574982b9a9ff0647e447f621e)
++++ Lab 2/lab2_proto.py	(date 1587999907270)
+@@ -115,6 +115,7 @@
+     # Create alpha return matrix, populate with n=0 formula result.
+     log_alpha = np.zeros((N, M))
+     log_alpha[0][:] = np.add(log_startprob.T, log_emlik[0][:])
++    # TODO: check if start needs to be transposed (alpha).
+ 
+     # For all other n, populate alpha with regular formula result.
+     for n in range(1, N):
+@@ -165,6 +166,34 @@
+         viterbi_path: best path
+     """
+ 
++    N, M = log_emlik.shape
++
++    log_viterbi = np.zeros((N, M))
++    viterbi_path = np.zeros(N)
++    backtrack_matrix = np.zeros((N, M))
++
++    # Populate viterbi matrix with with n=0 formula result.
++    log_viterbi[0][:] = np.add(log_startprob.T, log_emlik[0][:])
++    # TODO: check if start needs to be transposed (viterbi).
++
++    # For all other n, populate viterbi with regular recursive formula result.
++    for n in range(1, N):
++        for j in range(M):
++            # Store the highest likelihood and it's index.
++            log_viterbi[n][j] = log_emlik[n][j] + np.max(log_viterbi[n - 1][:] - log_transmat[:][j])
++            backtrack_matrix[n][j] = np.argmax(log_viterbi[n - 1][:] - log_transmat[:][j])
++
++    viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
++    viterbi_loglik = log_viterbi[N - 1][viterbi_path[N - 1]]
++
++    # Go through each column of the matrix backwards to find the route of the highest likelihood.
++    for i in range(N - 2, 1, -1):
++        viterbi_path[i] = backtrack_matrix[i + 1][viterbi_path[i + 1]]
++
++
++    return viterbi_loglik, viterbi_path
++
++
+ def statePosteriors(log_alpha, log_beta):
+     """State posterior (gamma) probabilities in log domain.
+ 
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># DT2119\nLabs for Speech and Speaker Recognition, KTH\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- README.md	(revision 2fdb00546e132d1574982b9a9ff0647e447f621e)
++++ README.md	(date 1587997398481)
+@@ -1,2 +1,13 @@
+ # DT2119
+-Labs for Speech and Speaker Recognition, KTH
++Labs completed for Speech and Speaker Recognition, KTH 2020.
++
++### Lab 1 - Feature Extraction
++Step by step implementation of Mel Filterbank and MFCC features, 
++correlation between these features was evaluated & utterances were
++ compared with Dynmaic Time Warping.
++
++
++### Lab 2 - HMMs with Gaussian Emissions 
++Algorithms for the evaluation and decoding of Hidden Markov Models
++implemented, this implementation was used to perform isolated word 
++recognition & algorithms for training Gaussian HMMs were implemented.
+\ No newline at end of file

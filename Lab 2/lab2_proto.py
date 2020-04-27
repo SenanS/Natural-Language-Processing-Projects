@@ -118,6 +118,7 @@ def forward(log_emlik, log_startprob, log_transmat):
     # Create alpha return matrix, populate with n=0 formula result.
     log_alpha = np.zeros((N, M))
     log_alpha[0][:] = np.add(log_startprob.T, log_emlik[0][:])
+    # TODO: check if start needs to be transposed (alpha).
 
     # For all other n, populate alpha with regular formula result.
     for n in range(1, N):
@@ -167,6 +168,34 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
         viterbi_loglik: log likelihood of the best path
         viterbi_path: best path
     """
+
+    N, M = log_emlik.shape
+
+    log_viterbi = np.zeros((N, M))
+    viterbi_path = np.zeros(N)
+    backtrack_matrix = np.zeros((N, M))
+
+    # Populate viterbi matrix with with n=0 formula result.
+    log_viterbi[0][:] = np.add(log_startprob.T, log_emlik[0][:])
+    # TODO: check if start needs to be transposed (viterbi).
+
+    # For all other n, populate viterbi with regular recursive formula result.
+    for n in range(1, N):
+        for j in range(M):
+            # Store the highest likelihood and it's index.
+            log_viterbi[n][j] = log_emlik[n][j] + np.max(log_viterbi[n - 1][:] - log_transmat[:][j])
+            backtrack_matrix[n][j] = np.argmax(log_viterbi[n - 1][:] - log_transmat[:][j])
+
+    viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
+    viterbi_loglik = log_viterbi[N - 1][viterbi_path[N - 1]]
+
+    # Go through each column of the matrix backwards to find the route of the highest likelihood.
+    for i in range(N - 2, 1, -1):
+        viterbi_path[i] = backtrack_matrix[i + 1][viterbi_path[i + 1]]
+
+
+    return viterbi_loglik, viterbi_path
+
 
 def statePosteriors(log_alpha, log_beta):
     """State posterior (gamma) probabilities in log domain.
