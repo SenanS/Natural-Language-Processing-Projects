@@ -1,5 +1,6 @@
 import numpy as np
-import lab2_tools.py
+import lab2_tools
+from prondict import prondict
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -36,11 +37,11 @@ def concatTwoHMMs(hmm1, hmm2):
     concat_hmm['startprob'] = hmm2['startprob'] * hmm1['startprob'][size1]
     concat_hmm['startprob'] = np.concatenate((hmm1['startprob'][0:size1], concat_hmm['startprob']))
 
-    product = np.reshape(hmm1['transmat'][0:-1, -1], (size1, 1)) @ np.reshape(hmm2['startprob'], (1, size2+1))
-    concat_hmm['transmat'] =  np.concatenate((hmm1['transmat'][0:-1, 0:-1], product), axis=1)
+    mul = np.reshape(hmm1['transmat'][0:-1, -1], (size1, 1)) @ np.reshape(hmm2['startprob'], (1, size2+1))
+    concat_hmm['transmat'] =  np.concatenate((hmm1['transmat'][0:-1, 0:-1], mul), axis=1)
 
-    concat = np.concatenate((np.zeros([size2+1, size2]), hmm2['transmat']), axis=1)
-    concat_hmm['transmat'] = np.concatenate((hmm3['transmat'], concat), axis=0)
+    tmp = np.concatenate((np.zeros([size2+1,size1]), hmm2['transmat']), axis=1)
+    concat_hmm['transmat'] = np.concatenate((concat_hmm['transmat'], tmp), axis=0)
 
     concat_hmm['means'] = np.concatenate((hmm1['means'], hmm2['means']), axis=0)
     concat_hmm['covars'] = np.concatenate((hmm1['covars'], hmm2['covars']), axis=0)
@@ -192,3 +193,24 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
          means: MxD mean vectors for each state
          covars: MxD covariance (variance) vectors for each state
     """
+
+if __name__ == "__main__":
+    data = np.load('lab2_data.npz', allow_pickle=True)['data']
+
+    # trained on only one single female speaker:
+    phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
+
+    """
+    # trained on the entire dataset:
+    phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+    """
+
+    # setting up isolated pronounciations:
+    isolated = {}
+    for digit in prondict.keys():
+        isolated[digit] = ['sil'] + prondict[digit] + ['sil']
+
+
+    wordHMMs = {}
+    wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
+    print(list(wordHMMs['o'].keys()))
