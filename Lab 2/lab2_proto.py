@@ -1,6 +1,8 @@
 import numpy as np
 import lab2_tools
 from prondict import prondict
+import matplotlib.pyplot as plt
+
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -194,6 +196,7 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
          covars: MxD covariance (variance) vectors for each state
     """
 
+
 if __name__ == "__main__":
     data = np.load('lab2_data.npz', allow_pickle=True)['data']
 
@@ -214,3 +217,17 @@ if __name__ == "__main__":
     wordHMMs = {}
     wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
     print(list(wordHMMs['o'].keys()))
+
+    example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
+
+    o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'], wordHMMs['o']['covars'])
+
+    print("Testing if likelihood is correct: ")
+    np.testing.assert_almost_equal(o_obsloglik, example['obsloglik'], 6)
+    print("Likelihood is correct.")
+
+    # plotting likelihood functions:
+    plt.pcolormesh(o_obsloglik.T)
+    plt.show()
+    plt.pcolormesh(example['obsloglik'].T)
+    plt.show()
