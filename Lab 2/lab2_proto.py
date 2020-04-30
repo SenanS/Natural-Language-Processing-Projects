@@ -146,10 +146,10 @@ def backward(log_emlik, log_startprob, log_transmat):
     log_beta = np.zeros((N, M))
 
     #For all other n, populate beta with regular formula result.
-    #Start at N-1 &, in increments of -1, finish at 0.
-    for n in range(N - 1, -1, -1):
+    #Start at N-2 &, in increments of -1, finish at 0.
+    for n in range(N - 2, -1, -1):
         for j in range(M):
-            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1][:] + log_emlik[n + 1][j] + log_transmat[:][j])
+            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1, :] + log_emlik[n + 1, :] + log_transmat[j, :-1])
 
     return log_beta
 
@@ -176,26 +176,27 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     backtrack_matrix = np.zeros((N, M))
 
     # Populate viterbi matrix with with n=0 formula result.
-    log_viterbi[0][:] = np.add(log_startprob.T, log_emlik[0][:])
-    # TODO: check if log_startprob needs to be transposed (viterbi).
+    log_viterbi[0][:] = np.add(log_startprob[:-1], log_emlik[0][:])
 
     # For all other n, populate viterbi with regular recursive formula result.
     for n in range(1, N):
         for j in range(M):
             # Store the highest likelihood and it's index.
-            log_viterbi[n][j] = log_emlik[n][j] + np.max(log_viterbi[n - 1][:] - log_transmat[:][j])
-            backtrack_matrix[n][j] = np.argmax(log_viterbi[n - 1][:] - log_transmat[:][j])
+            B_n = log_viterbi[n - 1, :] + log_transmat[:-1, j]
+            log_viterbi[n, j] = log_emlik[n, j] + np.max(B_n)
+            backtrack_matrix[n, j] = np.argmax(B_n)
 
-    # Setup return variables, depending on forceFinalState.
+    # Setup path variable, depending on forceFinalState.
     if forceFinalState:
         viterbi_path[N - 1] = M - 1
     else:
-        viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
-    viterbi_loglik = log_viterbi[N - 1][viterbi_path[N - 1]]
-
+        viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1, :])
     # Go through each column of the matrix backwards to find the route of the highest likelihood.
-    for i in range(N - 2, 1, -1):
-        viterbi_path[i] = backtrack_matrix[i + 1][viterbi_path[i + 1]]
+    for i in range(N - 2, -1, -1):
+        viterbi_path[i] = backtrack_matrix[i + 1, int(viterbi_path[i + 1])]
+
+    #Get best score
+    viterbi_loglik = np.max(log_viterbi[-1, :])
 
     return viterbi_loglik, viterbi_path
 
@@ -213,10 +214,10 @@ def statePosteriors(log_alpha, log_beta):
     """
     N, M = log_alpha.shape
     log_gamma = np.zeros(log_alpha.shape)
-    
+
     for i in range(N):
-        log_gamma[i] = log_alpha[i] + log_beta[i] - logsumexp(log_alpha[N-1])    
-    
+        log_gamma[i] = log_alpha[i] + log_beta[i] - logsumexp(log_alpha[N-1])
+
     return log_gamma
 
 def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
@@ -253,7 +254,6 @@ if __name__ == "__main__":
         isolated[digit] = ['sil'] + prondict[digit] + ['sil']
 
     wordHMMs = {}
-    # wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
     for digit in isolated.keys():
         wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
     print(list(wordHMMs['o'].keys()))
@@ -268,16 +268,15 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(o_obsloglik, example['obsloglik'], 6)
     print("Likelihood is correct.")
 
-    # plotting likelihood functions:
-    plt.title("Computed \"o\" obsloglik")
-    plt.pcolormesh(o_obsloglik.T)
-    plt.show()
-    plt.title("Example \"o\" obsloglik")
-    plt.pcolormesh(example['obsloglik'].T)
+    # plotting likelihood functions
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" obsloglik")
+    axs[0].pcolormesh(o_obsloglik.T)
+    axs[1].set_title("Example \"o\" obsloglik")
+    axs[1].pcolormesh(example['obsloglik'].T)
     plt.show()
 
     # Testing Forward function
-    # TODO: fix the fact that startprob matrix is 10 wide and emissions is 9 wide
     forward_probability = forward(o_obsloglik,
             np.log(wordHMMs['o']["startprob"]),
             np.log(wordHMMs['o']["transmat"]))
@@ -285,13 +284,45 @@ if __name__ == "__main__":
     print("Testing if forward probability is ≃ to example: ")
     np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
     print("Likelihood is correct.")
-    #
-    # # plotting forward functions:
-    plt.title("Computed \"o\" forward probability")
-    plt.pcolormesh(forward_probability.T)
+
+    #  plotting forward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" forward probability")
+    axs[0].pcolormesh(forward_probability.T)
+    axs[1].set_title("Example \"o\" forward probability")
+    axs[1].pcolormesh(example['logalpha'].T)
     plt.show()
-    plt.title("Example \"o\" forward probability")
-    plt.pcolormesh(example['logalpha'].T)
+
+
+    # Testing Backward function
+    backward_probability = backward(o_obsloglik,
+                                  np.log(wordHMMs['o']["startprob"]),
+                                  np.log(wordHMMs['o']["transmat"]))
+
+    print("Testing if backward probability is ≃ to example: ")
+    np.testing.assert_almost_equal(backward_probability, example['logbeta'], 6)
+    print("Likelihood is correct.")
+
+    # plotting backward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" backward probability")
+    axs[0].pcolormesh(backward_probability.T)
+    axs[1].set_title("Example \"o\" backward probability")
+    axs[1].pcolormesh(example['logbeta'].T)
     plt.show()
+
+    # Testing Viterbi function
+    viterbi_score, viterbi_path = viterbi(o_obsloglik,
+                                    np.log(wordHMMs['o']["startprob"]),
+                                    np.log(wordHMMs['o']["transmat"]),
+                                    False)
+
+    print("Testing if viterbi likelihood is ≃ to example: ")
+    np.testing.assert_almost_equal(viterbi_score, example['vloglik'], 6)
+    print("Likelihood is correct.")
+    print("Testing if viterbi path is ≃ to example: ")
+    np.testing.assert_almost_equal(viterbi_path, example['vpath'], 6)
+    print("Path is correct.")
+
 
 
