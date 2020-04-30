@@ -101,6 +101,20 @@ def gmmloglik(log_emlik, weights):
     Output:
         gmmloglik: scalar, log likelihood of data given the GMM model.
     """
+    #TODO: GMMLOGLIK still in testing
+    loglik_gmm = 0
+    loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
+
+    gmm = 0
+    for i in range(log_emlik.shape[0]):
+        gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
+
+    print(gmm - loglik_gmm)
+
+
+    return loglik_gmm
+
+
 
 def forward(log_emlik, log_startprob, log_transmat):
     """Forward (alpha) probabilities in log domain.
@@ -146,10 +160,10 @@ def backward(log_emlik, log_startprob, log_transmat):
     log_beta = np.zeros((N, M))
 
     #For all other n, populate beta with regular formula result.
-    #Start at N-1 &, in increments of -1, finish at 0.
-    for n in range(N - 1, -1, -1):
+    #Start at N-2 &, in increments of -1, finish at 0.
+    for n in range(N - 2, -1, -1):
         for j in range(M):
-            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1][:] + log_emlik[n + 1][j] + log_transmat[:][j])
+            log_beta[n][j] = lab2_tools.logsumexp(log_beta[n + 1, :] + log_emlik[n + 1, :] + log_transmat[j, :-1])
 
     return log_beta
 
@@ -176,26 +190,27 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     backtrack_matrix = np.zeros((N, M))
 
     # Populate viterbi matrix with with n=0 formula result.
-    log_viterbi[0][:] = np.add(log_startprob.T, log_emlik[0][:])
-    # TODO: check if log_startprob needs to be transposed (viterbi).
+    log_viterbi[0][:] = np.add(log_startprob[:-1], log_emlik[0][:])
 
     # For all other n, populate viterbi with regular recursive formula result.
     for n in range(1, N):
         for j in range(M):
             # Store the highest likelihood and it's index.
-            log_viterbi[n][j] = log_emlik[n][j] + np.max(log_viterbi[n - 1][:] - log_transmat[:][j])
-            backtrack_matrix[n][j] = np.argmax(log_viterbi[n - 1][:] - log_transmat[:][j])
+            B_n = log_viterbi[n - 1, :] + log_transmat[:-1, j]
+            log_viterbi[n, j] = log_emlik[n, j] + np.max(B_n)
+            backtrack_matrix[n, j] = np.argmax(B_n)
 
-    # Setup return variables, depending on forceFinalState.
+    # Setup path variable, depending on forceFinalState.
     if forceFinalState:
         viterbi_path[N - 1] = M - 1
     else:
-        viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1][:])
-    viterbi_loglik = log_viterbi[N - 1][viterbi_path[N - 1]]
-
+        viterbi_path[N - 1] = np.argmax(log_viterbi[N - 1, :])
     # Go through each column of the matrix backwards to find the route of the highest likelihood.
-    for i in range(N - 2, 1, -1):
-        viterbi_path[i] = backtrack_matrix[i + 1][viterbi_path[i + 1]]
+    for i in range(N - 2, -1, -1):
+        viterbi_path[i] = backtrack_matrix[i + 1, int(viterbi_path[i + 1])]
+
+    #Get best score
+    viterbi_loglik = np.max(log_viterbi[-1, :])
 
     return viterbi_loglik, viterbi_path
 
@@ -211,8 +226,7 @@ def statePosteriors(log_alpha, log_beta):
     Output:
         log_gamma: NxM array of gamma probabilities for each of the M states in the model
     """
-    log_gamma = log_alpha + log_beta - logsumexp(log_alpha[-1,:])
-
+    log_gamma = log_alpha + log_beta - lab2_tools.logsumexp(log_alpha[-1,:])
     return log_gamma
 
 def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
@@ -238,8 +252,8 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
     covars = np.zeros((M, D))
 
     for i in range(M):
-        quotient = np.exp(log_gamma[:, i])) / np.sum(np.exp(log_gamma[:, i])
-        means[i, :] = np.dot(X.T, quotient)
+        dot_product = np.dot(X.T, np.exp(log_gamma[:, i]))
+        means[i, :] = dot_product / np.sum(np.exp(log_gamma[:, i]))
 
         C = X.T - means[i,:].reshape((D, 1))
 
@@ -255,15 +269,14 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
 
 
 if __name__ == "__main__":
+
     data = np.load('lab2_data.npz', allow_pickle=True)['data']
-
+    example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
     # trained on only one single female speaker:
-    phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
-
-    """
+    phoneHMMs_one = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
     # trained on the entire dataset:
-    phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
-    """
+    phoneHMMs_all = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+
 
     # setting up isolated pronounciations:
     isolated = {}
@@ -271,14 +284,12 @@ if __name__ == "__main__":
         isolated[digit] = ['sil'] + prondict[digit] + ['sil']
 
     wordHMMs = {}
-    # wordHMMs['o'] = concatHMMs(phoneHMMs, isolated['o'])
     for digit in isolated.keys():
-        wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
+        wordHMMs[digit] = concatHMMs(phoneHMMs_one, isolated[digit])
     print(list(wordHMMs['o'].keys()))
 
 
-    example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
-
+    #Testing log likelihood function
     o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
                                                                   wordHMMs['o']['covars'])
 
@@ -286,16 +297,17 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(o_obsloglik, example['obsloglik'], 6)
     print("Likelihood is correct.")
 
-    # plotting likelihood functions:
-    plt.title("Computed \"o\" obsloglik")
-    plt.pcolormesh(o_obsloglik.T)
+    # plotting likelihood functions
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" obsloglik")
+    axs[0].pcolormesh(o_obsloglik.T)
+    axs[1].set_title("Example \"o\" obsloglik")
+    axs[1].pcolormesh(example['obsloglik'].T)
     plt.show()
-    plt.title("Example \"o\" obsloglik")
-    plt.pcolormesh(example['obsloglik'].T)
-    plt.show()
+    # The dark bars in the middle refer to 'ow', while the higher prob light bars
+    # refer the 'sil' on either side of the dark.
 
     # Testing Forward function
-    # TODO: fix the fact that startprob matrix is 10 wide and emissions is 9 wide
     forward_probability = forward(o_obsloglik,
             np.log(wordHMMs['o']["startprob"]),
             np.log(wordHMMs['o']["transmat"]))
@@ -303,13 +315,64 @@ if __name__ == "__main__":
     print("Testing if forward probability is ≃ to example: ")
     np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
     print("Likelihood is correct.")
-    #
-    # # plotting forward functions:
-    plt.title("Computed \"o\" forward probability")
-    plt.pcolormesh(forward_probability.T)
-    plt.show()
-    plt.title("Example \"o\" forward probability")
-    plt.pcolormesh(example['logalpha'].T)
+
+    #  plotting forward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" forward probability")
+    axs[0].pcolormesh(forward_probability.T)
+    axs[1].set_title("Example \"o\" forward probability")
+    axs[1].pcolormesh(example['logalpha'].T)
     plt.show()
 
 
+    # Testing Backward function
+    backward_probability = backward(o_obsloglik,
+                                  np.log(wordHMMs['o']["startprob"]),
+                                  np.log(wordHMMs['o']["transmat"]))
+
+    print("Testing if backward probability is ≃ to example: ")
+    np.testing.assert_almost_equal(backward_probability, example['logbeta'], 6)
+    print("Likelihood is correct.")
+
+    # plotting backward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" backward probability")
+    axs[0].pcolormesh(backward_probability.T)
+    axs[1].set_title("Example \"o\" backward probability")
+    axs[1].pcolormesh(example['logbeta'].T)
+    plt.show()
+
+
+    # Testing Viterbi function
+    viterbi_score, viterbi_path = viterbi(o_obsloglik,
+                                    np.log(wordHMMs['o']["startprob"]),
+                                    np.log(wordHMMs['o']["transmat"]),
+                                    False)
+
+    print("Testing if viterbi likelihood is ≃ to example: ")
+    np.testing.assert_almost_equal(viterbi_score, example['vloglik'], 6)
+    print("Likelihood is correct.")
+    print("Testing if viterbi path is ≃ to example: ")
+    np.testing.assert_almost_equal(viterbi_path, example['vpath'], 6)
+    print("Path is correct.")
+
+
+    # Testing State Posteriors function
+    gamma = statePosteriors(forward_probability, backward_probability)
+
+    print("Testing if State Posteriors is ≃ to example: ")
+    np.testing.assert_almost_equal(gamma, example['loggamma'], 6)
+    print("Likelihood is correct.")
+
+    # plotting backward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" State Posteriors")
+    axs[0].pcolormesh(gamma.T)
+    axs[1].set_title("Example \"o\" State Posteriors")
+    axs[1].pcolormesh(example['loggamma'].T)
+    plt.show()
+
+    # Testing log likeliood GMM
+    #TODO: Test gmmloglik, untested because I don't know where to get the weights
+
+    # gmmloglik(o_obsloglik, )
