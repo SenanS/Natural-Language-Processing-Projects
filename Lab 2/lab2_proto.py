@@ -211,12 +211,8 @@ def statePosteriors(log_alpha, log_beta):
     Output:
         log_gamma: NxM array of gamma probabilities for each of the M states in the model
     """
-    N, M = log_alpha.shape
-    log_gamma = np.zeros(log_alpha.shape)
-    
-    for i in range(N):
-        log_gamma[i] = log_alpha[i] + log_beta[i] - logsumexp(log_alpha[N-1])    
-    
+    log_gamma = log_alpha + log_beta - logsumexp(log_alpha[-1,:])
+
     return log_gamma
 
 def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
@@ -234,6 +230,28 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
          means: MxD mean vectors for each state
          covars: MxD covariance (variance) vectors for each state
     """
+
+    N, D = X.shape
+    M = log_gamma.shape[1]
+
+    means  = np.zeros((M, D))
+    covars = np.zeros((M, D))
+
+    for i in range(M):
+        quotient = np.exp(log_gamma[:, i])) / np.sum(np.exp(log_gamma[:, i])
+        means[i, :] = np.dot(X.T, quotient)
+
+        C = X.T - means[i,:].reshape((D, 1))
+
+        res = 0
+        for j in range(N):
+            res = res + np.exp(log_gamma[j, i]) * np.outer(C[:, j], C[:, j])
+
+        covars[i, :] = np.diag(res) / np.sum(np.exp(log_gamma[:, i]))
+
+    covars[covars < varianceFloor] = varianceFloor
+
+    return means, covars
 
 
 if __name__ == "__main__":
