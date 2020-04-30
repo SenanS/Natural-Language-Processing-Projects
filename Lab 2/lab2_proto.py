@@ -101,6 +101,20 @@ def gmmloglik(log_emlik, weights):
     Output:
         gmmloglik: scalar, log likelihood of data given the GMM model.
     """
+    #TODO: GMMLOGLIK still in testing
+    loglik_gmm = 0
+    loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
+
+    gmm = 0
+    for i in range(log_emlik.shape[0]):
+        gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
+
+    print(gmm - loglik_gmm)
+
+
+    return loglik_gmm
+
+
 
 def forward(log_emlik, log_startprob, log_transmat):
     """Forward (alpha) probabilities in log domain.
@@ -216,7 +230,7 @@ def statePosteriors(log_alpha, log_beta):
     log_gamma = np.zeros(log_alpha.shape)
 
     for i in range(N):
-        log_gamma[i] = log_alpha[i] + log_beta[i] - logsumexp(log_alpha[N-1])
+        log_gamma[i] = log_alpha[i] + log_beta[i] - lab2_tools.logsumexp(log_alpha[N-1])
 
     return log_gamma
 
@@ -238,15 +252,14 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
 
 
 if __name__ == "__main__":
+
     data = np.load('lab2_data.npz', allow_pickle=True)['data']
-
+    example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
     # trained on only one single female speaker:
-    phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
-
-    """
+    phoneHMMs_one = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
     # trained on the entire dataset:
-    phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
-    """
+    phoneHMMs_all = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+
 
     # setting up isolated pronounciations:
     isolated = {}
@@ -255,12 +268,11 @@ if __name__ == "__main__":
 
     wordHMMs = {}
     for digit in isolated.keys():
-        wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
+        wordHMMs[digit] = concatHMMs(phoneHMMs_one, isolated[digit])
     print(list(wordHMMs['o'].keys()))
 
 
-    example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
-
+    #Testing log likelihood function
     o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
                                                                   wordHMMs['o']['covars'])
 
@@ -275,6 +287,8 @@ if __name__ == "__main__":
     axs[1].set_title("Example \"o\" obsloglik")
     axs[1].pcolormesh(example['obsloglik'].T)
     plt.show()
+    # The dark bars in the middle refer to 'ow', while the higher prob light bars
+    # refer the 'sil' on either side of the dark.
 
     # Testing Forward function
     forward_probability = forward(o_obsloglik,
@@ -311,6 +325,7 @@ if __name__ == "__main__":
     axs[1].pcolormesh(example['logbeta'].T)
     plt.show()
 
+
     # Testing Viterbi function
     viterbi_score, viterbi_path = viterbi(o_obsloglik,
                                     np.log(wordHMMs['o']["startprob"]),
@@ -325,4 +340,22 @@ if __name__ == "__main__":
     print("Path is correct.")
 
 
+    # Testing State Posteriors function
+    gamma = statePosteriors(forward_probability, backward_probability)
 
+    print("Testing if State Posteriors is ≃ to example: ")
+    np.testing.assert_almost_equal(gamma, example['loggamma'], 6)
+    print("Likelihood is correct.")
+
+    # plotting backward functions:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" State Posteriors")
+    axs[0].pcolormesh(gamma.T)
+    axs[1].set_title("Example \"o\" State Posteriors")
+    axs[1].pcolormesh(example['loggamma'].T)
+    plt.show()
+
+    # Testing log likeliood GMM
+    #TODO: Test gmmloglik, untested because I don't know where to get the weights
+
+    # gmmloglik(o_obsloglik, )
