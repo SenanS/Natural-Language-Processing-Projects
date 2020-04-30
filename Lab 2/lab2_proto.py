@@ -117,16 +117,15 @@ def forward(log_emlik, log_startprob, log_transmat):
     N, M = log_emlik.shape
 
     # Create alpha return matrix, populate with n=0 formula result.
-    log_alpha = np.zeros((N, M))
-    log_alpha[0][:] = np.add(log_startprob, log_emlik[0][:])
-    # TODO: check if log_startprob needs to be transposed (alpha).
+    forward_prob = np.zeros((N, M))
 
-    # For all other n, populate alpha with regular formula result.
+    forward_prob[0, :] = log_startprob[:-1] + log_emlik[0, :]
+
     for n in range(1, N):
         for j in range(M):
-            log_alpha[n][j] = log_emlik[n][j] + lab2_tools.logsumexp(log_alpha[n - 1][:] + log_transmat[:][j])
+            forward_prob[n, j] = lab2_tools.logsumexp(forward_prob[n-1, :] + log_transmat[:-1, j]) + log_emlik[n, j]
 
-    return log_alpha
+    return forward_prob
 
 
 def backward(log_emlik, log_startprob, log_transmat):
@@ -279,17 +278,20 @@ if __name__ == "__main__":
 
     # Testing Forward function
     # TODO: fix the fact that startprob matrix is 10 wide and emissions is 9 wide
-    # forward_probability = forward(o_obsloglik, wordHMMs['o']['startprob'], wordHMMs['o']['transmat'])
-    # print("Testing if forward probability is ≃ to example: ")
-    # np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
-    # print("Likelihood is correct.")
+    forward_probability = forward(o_obsloglik,
+            np.log(wordHMMs['o']["startprob"]),
+            np.log(wordHMMs['o']["transmat"]))
+
+    print("Testing if forward probability is ≃ to example: ")
+    np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
+    print("Likelihood is correct.")
     #
     # # plotting forward functions:
-    # plt.title("Computed \"o\" forward probability")
-    # plt.pcolormesh(forward_probability.T)
-    # plt.show()
-    # plt.title("Example \"o\" forward probability")
-    # plt.pcolormesh(example['logalpha'].T)
-    # plt.show()
+    plt.title("Computed \"o\" forward probability")
+    plt.pcolormesh(forward_probability.T)
+    plt.show()
+    plt.title("Example \"o\" forward probability")
+    plt.pcolormesh(example['logalpha'].T)
+    plt.show()
 
 
