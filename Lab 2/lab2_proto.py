@@ -378,12 +378,13 @@ if __name__ == "__main__":
     axs[1].pcolormesh(scores_all.T)
     plt.show()
 
-
+    # Doing Maximum Likelihood
     scores_max = np.copy(scores.T)
     scores_max = (scores_max == scores_max.max(axis=0, keepdims=1))
 
     scores_max_all = np.copy(scores_all.T)
     scores_max_all = (scores_max_all == scores_max_all.max(axis=0, keepdims=1))
+
 
     #  plotting forward functions, comparing all speakers to one:
     fig, axs = plt.subplots(2)
@@ -460,6 +461,8 @@ if __name__ == "__main__":
     axs[1].set_title("forward scores Maximum Likelihood, from multiple speakers")
     axs[1].pcolormesh(scores_max_all)
     plt.show()
+
+
 
 
     # Testing State Posteriors function
