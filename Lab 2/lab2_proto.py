@@ -480,6 +480,17 @@ if __name__ == "__main__":
     axs[1].pcolormesh(example['loggamma'].T)
     plt.show()
 
+    # GMM likelihood model:
+    GMM.state_posterior = np.zeros(gamma.shape)
+    HMM = wordHMMs['o']
+    GMM_state_posterior = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], HMM['means'], HMM['covars'])
+    for i in range(GMM_state_posterior.shape[0]):
+        GMM_state_posterior[i, :] = GMM_state_posterior[i, :] - lab2_tools.logsumexp(GMM_state_posterior[i, :])
+
+    plt.pcolormesh(GMM_state_posterior.T)
+    plt.title("GMM state posterior")
+    plt.show()
+
     # Testing log likeliood GMM
     #Test gmmloglik, untested because I don't know where to get the weights
 
