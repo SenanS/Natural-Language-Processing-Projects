@@ -474,12 +474,19 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" State Posteriors")
     axs[0].pcolormesh(gamma.T)
+    axs[0].plot(viterbi_path, color='black')
     axs[1].set_title("Example \"o\" State Posteriors")
     axs[1].pcolormesh(example['loggamma'].T)
     plt.show()
 
+    # Summing GMMs
+    if np.sum(np.sum(np.exp(gamma), axis=1) == 71):
+        print("State Posteriors sum to 1")
+    else:
+        print("State Posteriors don't sum to 1")
+
+
     # Testing log likeliood GMM
-    #Test gmmloglik, untested because I don't know where to get the weights
 
     # gmmloglik(o_obsloglik, )
 
