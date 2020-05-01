@@ -379,7 +379,14 @@ if __name__ == "__main__":
     axs[1].pcolormesh(scores_all.T)
     plt.show()
 
-
+    score_max = np.copy(scores.T)
+    score_max_all = np.copy(scores_all.T)
+    predictions = (score_max == score_max.max(axis=0, keepdims=1))
+    plt.title("Performance of HMMs")
+    plt.pcolormesh(predictions)
+    plt.ylabel('Word Models')
+    plt.xlabel('utterances')
+    plt.show()
 
     # Testing Backward function
     backward_probability = backward(o_obsloglik,
@@ -435,6 +442,8 @@ if __name__ == "__main__":
     axs[1].set_title("Computed forward scoring")
     axs[1].pcolormesh(scores_all.T)
     plt.show()
+
+
 
 
     # Testing State Posteriors function
