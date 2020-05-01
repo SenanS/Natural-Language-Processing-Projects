@@ -359,7 +359,6 @@ if __name__ == "__main__":
             scores[i, j] = lab2_tools.logsumexp(forward_probability2[-1])
             j += 1
 
-
     scores_all = np.zeros((44, 11))
     for i in range(len(data)):
         data_sample = data[i]['lmfcc']
@@ -380,7 +379,21 @@ if __name__ == "__main__":
     plt.show()
 
 
+    scores_max = np.copy(scores.T)
+    scores_max = (scores_max == scores_max.max(axis=0, keepdims=1))
 
+    scores_max_all = np.copy(scores_all.T)
+    scores_max_all = (scores_max_all == scores_max_all.max(axis=0, keepdims=1))
+
+    #  plotting forward functions, comparing all speakers to one:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Forward scores Maximum Likelihood, from one speaker")
+    axs[0].pcolormesh(scores_max)
+    axs[1].set_title("forward scores Maximum Likelihood, from multiple speakers")
+    axs[1].pcolormesh(scores_max_all)
+    plt.show()
+
+    
     # Testing Backward function
     backward_probability = backward(o_obsloglik,
                                   np.log(wordHMMs['o']["startprob"]),
@@ -417,23 +430,35 @@ if __name__ == "__main__":
     plt.title("Viterbi overlay")
     plt.show()
 
-    scores = np.zeros((44, 11))
+    viterbi_scores = np.zeros((44, 11))
     for i in range(len(data)):
         data_sample = data[i]['lmfcc']
         j = 0
-        for key, HMM in wordHMMs.items():
+        for key, HMM in wordHMMs_all.items():
             log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
             v_prob, v_path = viterbi(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]), False)
-            scores[i, j] = v_prob
+            viterbi_scores[i, j] = v_prob
             j += 1
 
 
-
+    # plotting the "normal viterbi"
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed viterbi scoring")
-    axs[0].pcolormesh(scores.T)
+    axs[0].pcolormesh(viterbi_scores.T)
     axs[1].set_title("Computed forward scoring")
     axs[1].pcolormesh(scores_all.T)
+    plt.show()
+
+    # plot maximum viterbi scoring
+    viterbi_scores_max = np.copy(viterbi_scores.T)
+    viterbi_scores_max = (viterbi_scores_max == viterbi_scores_max.max(axis=0, keepdims=1))
+
+    #  plotting forward functions, comparing all speakers to one:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Viterbi scores max, from multiple speakers")
+    axs[0].pcolormesh(viterbi_scores_max)
+    axs[1].set_title("forward scores Maximum Likelihood, from multiple speakers")
+    axs[1].pcolormesh(scores_max_all)
     plt.show()
 
 
