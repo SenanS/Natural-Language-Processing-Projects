@@ -101,18 +101,18 @@ def gmmloglik(log_emlik, weights):
     Output:
         gmmloglik: scalar, log likelihood of data given the GMM model.
     """
-    #TODO: GMMLOGLIK still in testing
-    loglik_gmm = 0
-    loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
-
-    gmm = 0
-    for i in range(log_emlik.shape[0]):
-        gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
-
-    print(gmm - loglik_gmm)
-
-
-    return loglik_gmm
+    # # GMMLOGLIK still in testing
+    # loglik_gmm = 0
+    # loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
+    #
+    # gmm = 0
+    # for i in range(log_emlik.shape[0]):
+    #     gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
+    #
+    # print(gmm - loglik_gmm)
+    #
+    #
+    # return loglik_gmm
 
 
 
@@ -255,7 +255,7 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
         dot_product = np.dot(X.T, np.exp(log_gamma[:, i]))
         means[i, :] = dot_product / np.sum(np.exp(log_gamma[:, i]))
 
-        C = X.T - means[i,:].reshape((D, 1))
+        C = X.T - means[i, :].reshape((D, 1))
 
         res = 0
         for j in range(N):
@@ -286,10 +286,15 @@ if __name__ == "__main__":
     wordHMMs = {}
     for digit in isolated.keys():
         wordHMMs[digit] = concatHMMs(phoneHMMs_one, isolated[digit])
+
     print(list(wordHMMs['o'].keys()))
     print(list(wordHMMs.keys()))
 
 
+    wordHMMs_all = {}
+    for digit in isolated.keys():
+        wordHMMs_all[digit] = concatHMMs(phoneHMMs_all, isolated[digit])
+    print(list(wordHMMs_all.keys()))
 
     #Testing log likelihood function
     o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
@@ -326,12 +331,23 @@ if __name__ == "__main__":
     axs[1].pcolormesh(example['logalpha'].T)
     plt.show()
 
-
-    o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
-                                                                  wordHMMs['o']['covars'])
-    forward_probability_all_speakers = forward()
+    # Just looking at the differences.
+    o_obsloglik_all = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs_all['o']['means'],
+                                                                  wordHMMs_all['o']['covars'])
     
-    """
+    forward_probability_all = forward(o_obsloglik_all,
+            np.log(wordHMMs_all['o']["startprob"]),
+            np.log(wordHMMs_all['o']["transmat"]))
+
+    #  plotting forward functions, comparing all speakers to one:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed \"o\" forward probability, from one speaker")
+    axs[0].pcolormesh(forward_probability.T)
+    axs[1].set_title("Example \"o\" forward probability, from multiple")
+    axs[1].pcolormesh(forward_probability_all.T)
+    plt.show()
+    
+
     scores = np.zeros((44, 11))
     for i in range(len(data)):
         data_sample = data[i]['lmfcc']
@@ -339,15 +355,29 @@ if __name__ == "__main__":
         j = 0
         for key, HMM in wordHMMs.items():
             log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
-            forward_probability = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
-            scores[i, j] = lab2_tools.logsumexp(forward_probability[-1, :])
+            forward_probability2 = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
+            scores[i, j] = lab2_tools.logsumexp(forward_probability2[-1, :])
             j += 1
 
-    print(scores)
-    plt.pcolormesh(scores.T)
-    plt.show()
-    """
 
+    scores_all = np.zeros((44, 11))
+    for i in range(len(data)):
+        data_sample = data[i]['lmfcc']
+
+        j = 0
+        for key, HMM in wordHMMs_all.items():
+            log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
+            forward_probability2 = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
+            scores_all[i, j] = lab2_tools.logsumexp(forward_probability2[-1, :])
+            j += 1
+
+    #  plotting forward functions, comparing all speakers to one:
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Forward scores from one speaker")
+    axs[0].pcolormesh(scores.T)
+    axs[1].set_title("forward scores from multiple speakers")
+    axs[1].pcolormesh(scores_all.T)
+    plt.show()
 
 
 
@@ -360,7 +390,7 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(backward_probability, example['logbeta'], 6)
     print("Likelihood is correct.")
 
-    # plotting backward functions:
+    # plotting forward functions:
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" backward probability")
     axs[0].pcolormesh(backward_probability.T)
@@ -382,6 +412,11 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(viterbi_path, example['vpath'], 6)
     print("Path is correct.")
 
+    plt.pcolormesh(forward_probability.T)
+    plt.plot(viterbi_path.T)
+    plt.title("Viterbi overlay")
+    plt.show()
+
 
     # Testing State Posteriors function
     gamma = statePosteriors(forward_probability, backward_probability)
@@ -390,7 +425,7 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(gamma, example['loggamma'], 6)
     print("Likelihood is correct.")
 
-    # plotting backward functions:
+    # plotting State Posteriors functions:
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" State Posteriors")
     axs[0].pcolormesh(gamma.T)
@@ -399,7 +434,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Testing log likeliood GMM
-    #TODO: Test gmmloglik, untested because I don't know where to get the weights
+    #Test gmmloglik, untested because I don't know where to get the weights
 
     # gmmloglik(o_obsloglik, )
 
