@@ -287,6 +287,8 @@ if __name__ == "__main__":
     for digit in isolated.keys():
         wordHMMs[digit] = concatHMMs(phoneHMMs_one, isolated[digit])
     print(list(wordHMMs['o'].keys()))
+    print(list(wordHMMs.keys()))
+
 
 
     #Testing log likelihood function
@@ -323,6 +325,30 @@ if __name__ == "__main__":
     axs[1].set_title("Example \"o\" forward probability")
     axs[1].pcolormesh(example['logalpha'].T)
     plt.show()
+
+
+    o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
+                                                                  wordHMMs['o']['covars'])
+    forward_probability_all_speakers = forward()
+    
+    """
+    scores = np.zeros((44, 11))
+    for i in range(len(data)):
+        data_sample = data[i]['lmfcc']
+
+        j = 0
+        for key, HMM in wordHMMs.items():
+            log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
+            forward_probability = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
+            scores[i, j] = lab2_tools.logsumexp(forward_probability[-1, :])
+            j += 1
+
+    print(scores)
+    plt.pcolormesh(scores.T)
+    plt.show()
+    """
+
+
 
 
     # Testing Backward function
@@ -376,3 +402,5 @@ if __name__ == "__main__":
     #TODO: Test gmmloglik, untested because I don't know where to get the weights
 
     # gmmloglik(o_obsloglik, )
+
+
