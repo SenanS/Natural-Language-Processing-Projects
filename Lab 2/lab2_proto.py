@@ -101,18 +101,18 @@ def gmmloglik(log_emlik, weights):
     Output:
         gmmloglik: scalar, log likelihood of data given the GMM model.
     """
-    #TODO: GMMLOGLIK still in testing
-    loglik_gmm = 0
-    loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
-
-    gmm = 0
-    for i in range(log_emlik.shape[0]):
-        gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
-
-    print(gmm - loglik_gmm)
-
-
-    return loglik_gmm
+    # # GMMLOGLIK still in testing
+    # loglik_gmm = 0
+    # loglik_gmm += lab2_tools.logsumexp(log_emlik[:, :] + np.log(weights))
+    #
+    # gmm = 0
+    # for i in range(log_emlik.shape[0]):
+    #     gmm += lab2_tools.logsumexp(log_emlik[i, :] + np.log(weights))
+    #
+    # print(gmm - loglik_gmm)
+    #
+    #
+    # return loglik_gmm
 
 
 
@@ -255,7 +255,7 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
         dot_product = np.dot(X.T, np.exp(log_gamma[:, i]))
         means[i, :] = dot_product / np.sum(np.exp(log_gamma[:, i]))
 
-        C = X.T - means[i,:].reshape((D, 1))
+        C = X.T - means[i, :].reshape((D, 1))
 
         res = 0
         for j in range(N):
@@ -286,8 +286,12 @@ if __name__ == "__main__":
     wordHMMs = {}
     for digit in isolated.keys():
         wordHMMs[digit] = concatHMMs(phoneHMMs_one, isolated[digit])
-    print(list(wordHMMs['o'].keys()))
+    print(list(wordHMMs.keys()))
 
+    wordHMMs_all = {}
+    for digit in isolated.keys():
+        wordHMMs_all[digit] = concatHMMs(phoneHMMs_all, isolated[digit])
+    print(list(wordHMMs_all.keys()))
 
     #Testing log likelihood function
     o_obsloglik = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'],
@@ -334,7 +338,7 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(backward_probability, example['logbeta'], 6)
     print("Likelihood is correct.")
 
-    # plotting backward functions:
+    # plotting forward functions:
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" backward probability")
     axs[0].pcolormesh(backward_probability.T)
@@ -364,7 +368,7 @@ if __name__ == "__main__":
     np.testing.assert_almost_equal(gamma, example['loggamma'], 6)
     print("Likelihood is correct.")
 
-    # plotting backward functions:
+    # plotting State Posteriors functions:
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" State Posteriors")
     axs[0].pcolormesh(gamma.T)
@@ -373,6 +377,6 @@ if __name__ == "__main__":
     plt.show()
 
     # Testing log likeliood GMM
-    #TODO: Test gmmloglik, untested because I don't know where to get the weights
+    #Test gmmloglik, untested because I don't know where to get the weights
 
     # gmmloglik(o_obsloglik, )
