@@ -479,13 +479,27 @@ if __name__ == "__main__":
     axs[1].pcolormesh(example['loggamma'].T)
     plt.show()
 
+    # GMM likelihood model:
+    GMM_state_posterior = np.zeros(gamma.shape)
+    HMM = wordHMMs['o']
+    GMM_state_posterior = lab2_tools.log_multivariate_normal_density_diag(example['lmfcc'], HMM['means'], HMM['covars'])
+    for i in range(GMM_state_posterior.shape[0]):
+        GMM_state_posterior[i, :] = GMM_state_posterior[i, :] - lab2_tools.logsumexp(GMM_state_posterior[i, :])
+
+    plt.pcolormesh(GMM_state_posterior.T)
+    plt.title("GMM state posterior")
+    plt.show()
+
     # Summing GMMs
-    if np.sum(np.sum(np.exp(gamma), axis=1) == 71):
-        print("State Posteriors sum to 1")
-    else:
-        print("State Posteriors don't sum to 1")
+    np.testing.assert_almost_equal(np.sum(np.sum(np.exp(gamma), axis=1)), 71, 6)
+    print("State Posteriors sum to 1")
 
-
+    # Summing HMMs
+    print("Sum of HMMs - time axis")
+    print(np.sum(np.exp(o_obsloglik), axis=1))
+    print("Sum of HMMs - both axes")
+    print(np.sum(np.sum(np.exp(o_obsloglik), axis=1)))
+    print("test")
     # Testing log likeliood GMM
 
     # gmmloglik(o_obsloglik, )
