@@ -479,6 +479,8 @@ if __name__ == "__main__":
     axs[1].pcolormesh(example['loggamma'].T)
     plt.show()
 
+    """
+    I think this part should be removed
     # GMM likelihood model:
     GMM_state_posterior = np.zeros(gamma.shape)
     HMM = wordHMMs['o']
@@ -489,6 +491,7 @@ if __name__ == "__main__":
     plt.pcolormesh(GMM_state_posterior.T)
     plt.title("GMM state posterior")
     plt.show()
+    """
 
     # Summing GMMs
     np.testing.assert_almost_equal(np.sum(np.sum(np.exp(gamma), axis=1)), 71, 6)
