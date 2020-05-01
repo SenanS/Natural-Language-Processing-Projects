@@ -356,7 +356,7 @@ if __name__ == "__main__":
         for key, HMM in wordHMMs.items():
             log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
             forward_probability2 = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
-            scores[i, j] = lab2_tools.logsumexp(forward_probability2[-1, :])
+            scores[i, j] = lab2_tools.logsumexp(forward_probability2[-1])
             j += 1
 
 
@@ -368,7 +368,7 @@ if __name__ == "__main__":
         for key, HMM in wordHMMs_all.items():
             log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
             forward_probability2 = forward(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]))
-            scores_all[i, j] = lab2_tools.logsumexp(forward_probability2[-1, :])
+            scores_all[i, j] = lab2_tools.logsumexp(forward_probability2[-1])
             j += 1
 
     #  plotting forward functions, comparing all speakers to one:
@@ -413,8 +413,29 @@ if __name__ == "__main__":
     print("Path is correct.")
 
     plt.pcolormesh(forward_probability.T)
-    plt.plot(viterbi_path.T)
+    plt.plot(viterbi_path.T, color='black')
     plt.title("Viterbi overlay")
+    plt.show()
+
+    scores = np.zeros((44, 11))
+    for i in range(len(data)):
+        data_sample = data[i]['lmfcc']
+        j = 0
+        for key, HMM in wordHMMs.items():
+            log_lik = lab2_tools.log_multivariate_normal_density_diag(data_sample, HMM["means"], HMM["covars"])
+            v_prob, v_path = viterbi(log_lik, np.log(HMM["startprob"]), np.log(HMM["transmat"]), False)
+            scores[i, j] = v_prob
+            j += 1
+
+    plt.pcolormesh(scores.T)
+    plt.title("Viterbi Scoring.")
+    plt.show()
+
+    fig, axs = plt.subplots(2)
+    axs[0].set_title("Computed viterbi scoring")
+    axs[0].pcolormesh(scores.T)
+    axs[1].set_title("Computed forward scoring")
+    axs[1].pcolormesh(forward_probability_all)
     plt.show()
 
 
