@@ -427,15 +427,13 @@ if __name__ == "__main__":
             scores[i, j] = v_prob
             j += 1
 
-    plt.pcolormesh(scores.T)
-    plt.title("Viterbi Scoring.")
-    plt.show()
+
 
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed viterbi scoring")
     axs[0].pcolormesh(scores.T)
     axs[1].set_title("Computed forward scoring")
-    axs[1].pcolormesh(forward_probability_all)
+    axs[1].pcolormesh(scores_all.T)
     plt.show()
 
 
