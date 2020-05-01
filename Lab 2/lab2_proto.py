@@ -510,8 +510,8 @@ if __name__ == "__main__":
 
     # Section 6.2:
 
-    means = wordHMMs_all_model['4']['means']
-    covars = wordHMMs_all_model['4']['covars']
+    means = wordHMMs_all['4']['means']
+    covars = wordHMMs_all['4']['covars']
 
     num_iter = 20
     log_likelihood = np.inf
