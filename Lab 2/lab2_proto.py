@@ -484,3 +484,30 @@ if __name__ == "__main__":
     # gmmloglik(o_obsloglik, )
 
 
+    # Section 6.2:
+
+    means = wordHMMs_all_model['4']['means']
+    covars = wordHMMs_all_model['4']['covars']
+
+    num_iter = 20
+    log_likelihood = np.inf
+
+    for i in range(num_iter):
+        obsloglik = lab2_tools.log_multivariate_normal_density_diag(data[10]['lmfcc'], means, covars)
+
+        log_alpha = forward(obsloglik, np.log(wordHMMs_all['4']['startprob']), np.log(wordHMMs_all['4']['transmat']))
+
+        log_beta = backward(obsloglik, np.log(wordHMMs_all['4']['startprob']), np.log(wordHMMs_all['4']['transmat']))
+
+        log_likelihood_curr = lab2_tools.logsumexp(log_alpha[-1, :])
+
+        if abs(log_likelihood - log_likelihood_curr) < 1:
+            break
+
+        log_likelihood = log_likelihood_curr
+
+        log_gamma = statePosteriors(log_alpha, log_beta)
+
+        means, covars = updateMeanAndVar(data[10]['lmfcc'], log_gamma)
+
+    
