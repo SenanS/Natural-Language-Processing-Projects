@@ -510,6 +510,7 @@ if __name__ == "__main__":
 
     # Section 6.2:
 
+    print("6.2, using wordHMMs_all[4]:")
     means = wordHMMs_all['4']['means']
     covars = wordHMMs_all['4']['covars']
 
@@ -529,9 +530,37 @@ if __name__ == "__main__":
             break
 
         log_likelihood = log_likelihood_curr
-
+        
+        # Printout showing log_likelihood + 
+        print("iteration: " + str(i) + "\tlog likelihood: " + str(log_likelihood))
         log_gamma = statePosteriors(log_alpha, log_beta)
 
         means, covars = updateMeanAndVar(data[10]['lmfcc'], log_gamma)
 
+    print("6.2, using wordHMMs_all[8]:")
+    means = wordHMMs_all['8']['means']
+    covars = wordHMMs_all['8']['covars']
+
+    num_iter = 20
+    log_likelihood = np.inf
+
+    for i in range(num_iter):
+        obsloglik = lab2_tools.log_multivariate_normal_density_diag(data[10]['lmfcc'], means, covars)
+
+        log_alpha = forward(obsloglik, np.log(wordHMMs_all['8']['startprob']), np.log(wordHMMs_all['8']['transmat']))
+
+        log_beta = backward(obsloglik, np.log(wordHMMs_all['8']['startprob']), np.log(wordHMMs_all['8']['transmat']))
+
+        log_likelihood_curr = lab2_tools.logsumexp(log_alpha[-1, :])
+
+        if abs(log_likelihood - log_likelihood_curr) < 1:
+            break
+
+        log_likelihood = log_likelihood_curr
+        
+        # Printout showing log_likelihood + 
+        print("iteration: " + str(i) + "\tlog likelihood: " + str(log_likelihood))
+        log_gamma = statePosteriors(log_alpha, log_beta)
+
+        means, covars = updateMeanAndVar(data[10]['lmfcc'], log_gamma)
     
