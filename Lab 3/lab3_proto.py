@@ -42,34 +42,58 @@ def forcedAlignment(lmfcc, phoneHMMs, phoneTrans):
       list of strings in the form phoneme_index specifying, for each time step
       the state from phoneHMMs corresponding to the viterbi path.
    """
+   HMM = concatHMMs(phoneHMMs, phoneTrans)
+   
+   # given by assignement:
+   stateTrans = [phone + '_' + str(stateid) for phone in phoneTrans \
+                           for stateid in range(phoneHMMs[phone]['means'].shape[0])]
+
+   data_log_lik = log_multivariate_normal_density_diag(
+                  lmfcc, HMM["means"], HMM["covars"])
+   viterbi_loglik, viterbi_path = viterbi(data_log_lik,
+                  np.log(HMM["startprob"]),
+                  np.log(HMM["transmat"]))
+
+   result = []
+   for i in viterbi_path:
+      result = result + [stateTrans[i]]
+
+   return result
+
+
 
 def hmmLoop(hmmmodels, namelist=None):
-    """ Combines HMM models in a loop
+   """ Combines HMM models in a loop
 
-    Args:
-       hmmmodels: list of dictionaries with the following keys:
-           name: phonetic or word symbol corresponding to the model
-           startprob: M+1 array with priori probability of state
-           transmat: (M+1)x(M+1) transition matrix
-           means: MxD array of mean vectors
-           covars: MxD array of variances
-       namelist: list of model names that we want to combine, if None,
-                 all the models in hmmmodels are used
+   Args:
+      hmmmodels: list of dictionaries with the following keys:
+         name: phonetic or word symbol corresponding to the model
+         startprob: M+1 array with priori probability of state
+         transmat: (M+1)x(M+1) transition matrix
+         means: MxD array of mean vectors
+         covars: MxD array of variances
+      namelist: list of model names that we want to combine, if None,
+               all the models in hmmmodels are used
 
-    D is the dimension of the feature vectors
-    M is the number of emitting states in each HMM model (could be
-      different in each model)
+   D is the dimension of the feature vectors
+   M is the number of emitting states in each HMM model (could be
+   different in each model)
 
-    Output
-       combinedhmm: dictionary with the same keys as the input but
-                    combined models
-       stateMap: map between states in combinedhmm and states in the
-                 input models.
+   Output
+      combinedhmm: dictionary with the same keys as the input but
+                  combined models
+      stateMap: map between states in combinedhmm and states in the
+               input models.
 
-    Examples:
-       phoneLoop = hmmLoop(phoneHMMs)
-       wordLoop = hmmLoop(wordHMMs, ['o', 'z', '1', '2', '3'])
-    """
+   Examples:
+      phoneLoop = hmmLoop(phoneHMMs)
+      wordLoop = hmmLoop(wordHMMs, ['o', 'z', '1', '2', '3'])
+   """
+
+   # didn't we already do this in lab 2?
+   # We'll have to 
+
+
 
 
 if __name__ == "__main__":
