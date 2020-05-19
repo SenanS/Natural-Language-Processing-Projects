@@ -2,6 +2,7 @@ import numpy as np
 import lab2_tools
 from prondict import prondict
 import matplotlib.pyplot as plt
+import time
 
 
 def concatTwoHMMs(hmm1, hmm2):
@@ -315,9 +316,14 @@ if __name__ == "__main__":
     # refer the 'sil' on either side of the dark.
 
     # Testing Forward function
+    Forward_start = time.time()
     forward_probability = forward(o_obsloglik,
             np.log(wordHMMs['o']["startprob"]),
             np.log(wordHMMs['o']["transmat"]))
+
+    Forward_end = time.time()
+    print("Time to compute forward probability:")
+    print(Forward_end - Forward_start)
 
     print("Testing if forward probability is ≃ to example: ")
     np.testing.assert_almost_equal(forward_probability, example['logalpha'], 6)
@@ -343,7 +349,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2)
     axs[0].set_title("Computed \"o\" forward probability, from one speaker")
     axs[0].pcolormesh(forward_probability.T)
-    axs[1].set_title("Example \"o\" forward probability, from multiple")
+    axs[1].set_title("Computed \"o\" forward probability, from multiple speakers")
     axs[1].pcolormesh(forward_probability_all.T)
     plt.show()
     
@@ -374,7 +380,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2)
     axs[0].set_title("Forward scores from one speaker")
     axs[0].pcolormesh(scores.T)
-    axs[1].set_title("forward scores from multiple speakers")
+    axs[1].set_title("Forward scores from multiple speakers")
     axs[1].pcolormesh(scores_all.T)
     plt.show()
 
@@ -390,7 +396,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2)
     axs[0].set_title("Forward scores Maximum Likelihood, from one speaker")
     axs[0].pcolormesh(scores_max)
-    axs[1].set_title("forward scores Maximum Likelihood, from multiple speakers")
+    axs[1].set_title("Forward scores Maximum Likelihood, from multiple speakers")
     axs[1].pcolormesh(scores_max_all)
     plt.show()
 
@@ -414,10 +420,16 @@ if __name__ == "__main__":
 
 
     # Testing Viterbi function
+    Viterbi_start = time.time()
     viterbi_score, viterbi_path = viterbi(o_obsloglik,
                                     np.log(wordHMMs['o']["startprob"]),
                                     np.log(wordHMMs['o']["transmat"]),
                                     False)
+    Viterbi_end = time.time()
+    print("Time to compute viterbi probability:")
+    print(Viterbi_end - Viterbi_start)
+    print("The multiplier by which Viterbi calculation is faster than Forward calculation  is:")
+    print((Forward_end - Forward_start) / (Viterbi_end - Viterbi_start))
 
     print("Testing if viterbi likelihood is ≃ to example: ")
     np.testing.assert_almost_equal(viterbi_score, example['vloglik'], 6)
@@ -458,7 +470,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(2)
     axs[0].set_title("Viterbi scores max, from multiple speakers")
     axs[0].pcolormesh(viterbi_scores_max)
-    axs[1].set_title("forward scores Maximum Likelihood, from multiple speakers")
+    axs[1].set_title("Forward scores Maximum Likelihood, from multiple speakers")
     axs[1].pcolormesh(scores_max_all)
     plt.show()
 
@@ -502,7 +514,7 @@ if __name__ == "__main__":
     print(np.sum(np.exp(o_obsloglik), axis=1))
     print("Sum of HMMs - both axes")
     print(np.sum(np.sum(np.exp(o_obsloglik), axis=1)))
-    print("test")
+    # print("test")
     # Testing log likeliood GMM
 
     # gmmloglik(o_obsloglik, )
