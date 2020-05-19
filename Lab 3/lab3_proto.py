@@ -91,7 +91,7 @@ def hmmLoop(hmmmodels, namelist=None):
    """
 
    # didn't we already do this in lab 2?
-   # We'll have to 
+   # We'll have to double check
 
 
 
