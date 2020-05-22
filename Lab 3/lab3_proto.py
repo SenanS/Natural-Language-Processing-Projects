@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from prondict import prondict
 from lab1_proto import *
@@ -98,6 +99,31 @@ def hmmLoop(hmmmodels, namelist=None):
     # We'll have to double check
 
 
+def extractFeatures():
+
+    traindata = []
+    for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/train'):
+        for file in files:
+            if file.endswith('.wav'):
+                filename = os.path.join(root, file)
+                samples, samplingrate = loadAudio(filename)
+                #your code for feature extraction and forced alignment
+                traindata.append({'filename': filename, 'lmfcc': lmfcc,
+                                  'mspec': 'mspec', 'targets': targets})
+
+    testdata = []
+    for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/test'):
+        for file in files:
+            if file.endswith('.wav'):
+                filename = os.path.join(root, file)
+                samples, samplingrate = loadAudio(filename)
+                # your code for feature extraction and forced alignment
+                testdata.append({'filename': filename, 'lmfcc': lmfcc,
+                                  'mspec': 'mspec', 'targets': targets})
+    np.savez('testdata.npz', testdata=testdata)
+    np.savez('traindata.npz', traindata=traindata)
+
+
 if __name__ == "__main__":
     ## 4.1 Load all possible Phones & their states.
     phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
@@ -122,7 +148,7 @@ if __name__ == "__main__":
     ## 4.2 Forcefully aligning transcripts of data,
     # This is done by concatting HMM of utterance & using viterbi to find best path
     #TODO: test each function below against example data
-    filename = 'tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
+    filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
     samples, samplingrate = loadAudio(filename)
     np.testing.assert_almost_equal(samples, example['samples'], 6)
 
@@ -148,3 +174,5 @@ if __name__ == "__main__":
 
     #Check success in wavesurfer
     frames2trans(viterbiStateTrans, outfilename='z43a.lab')
+
+    ## 4.3 Feature Extraction
