@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.fftpack
 import scipy.signal
+import sklearn
 from sklearn.mixture import GaussianMixture
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial import distance
