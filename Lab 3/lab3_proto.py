@@ -128,7 +128,8 @@ def extractFeatures():
 
 
 if __name__ == "__main__":
-    ## 4.1 Load all possible Phones & their states.
+    ##                                      4.1 Load all possible Phones & their states.                                        ##
+
     phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
@@ -148,7 +149,10 @@ if __name__ == "__main__":
     ##Loading examples
     example = np.load('lab3_example.npz', allow_pickle=True)['example'].item()
 
-    ## 4.2 Forcefully aligning transcripts of data,
+
+
+    ##                                      4.2 Forcefully aligning transcripts of data                                     ##
+
     # This is done by concatting HMM of utterance & using viterbi to find best path
     # TODO: test each function below against example data
     # filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
@@ -214,7 +218,9 @@ if __name__ == "__main__":
     #Check success in wavesurfer
     frames2trans(force_aligned[0], outfilename='z43a.lab')
 
-    ## 4.3 Feature Extraction
+
+
+    ##                                      4.3 Feature Extraction                                      ##
     extractFeatures()
 
     ## Split Data
