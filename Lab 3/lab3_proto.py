@@ -14,15 +14,15 @@ np.seterr(divide='ignore', invalid='ignore')
 def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
     """ word2phones: converts word level to phone level transcription adding silence
 
-   Args:
-      wordList: list of word symbols
-      pronDict: pronunciation dictionary. The keys correspond to words in wordList
-      addSilence: if True, add initial and final silence
-      addShortPause: if True, add short pause model "sp" at end of each word
-   Output:
-      list of phone symbols
-   """
-
+    Args:
+        wordList: list of word symbols
+        pronDict: pronunciation dictionary. The keys correspond to words in wordList
+        addSilence: if True, add initial and final silence
+        addShortPause: if True, add short pause model "sp" at end of each word
+    Output:
+        list of phone symbols
+    """
+    
     phone_list = []
     for digit in wordList:
         if addShortPause:
@@ -152,37 +152,74 @@ if __name__ == "__main__":
     # This is done by concatting HMM of utterance & using viterbi to find best path
     # TODO: test each function below against example data
     # filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
+    print("Running tests for each function against example data:\n")
     filename = 'z43a.wav'
     samples, samplingrate = loadAudio(filename)
     np.testing.assert_almost_equal(samples, example['samples'], 6)
+    print("\tSample assert passed.")
 
+    # LMFCC test:
     lmfcc = mfcc(samples)
-    # np.testing.assert_almost_equal(lmfcc, example['lmfcc'], 6)
+    np.testing.assert_almost_equal(lmfcc, example['lmfcc'], 6)
+    print("\tlmfcc assert passed.")
 
+
+    # phoneme transcription
     wordTrans = list(path2info(filename)[2])
-    # np.testing.assert_almost_equal(wordTrans, example['wordTrans'], 6)
+    phoneTrans = words2phones(wordTrans, prondict, addSilence=True, addShortPause=True)
 
-    phoneTrans = words2phones(wordTrans, prondict)
-    # np.testing.assert_almost_equal(phoneTrans, example['phoneTrans'], 6)
+    test = True
+    for i, val in enumerate(phoneTrans):
+        test = test and (val == example["phoneTrans"][i])
 
+    if test:
+        print("\tphoneTrans is correct.")
+    else:
+        print("\tphoneTrans is NOT correct!")
+
+
+    # utteranceHMM test:
     utteranceHMM = concatHMMs(phoneHMMs, phoneTrans)
-    # np.testing.assert_almost_equal(utteranceHMM, example['utteranceHMM'], 6)
+    for i, val in example['utteranceHMM'].items():
+        np.testing.assert_almost_equal(utteranceHMM[i], example['utteranceHMM'][i], 6)
+    print("\tUtteranceHMM assert passed.")
 
+
+    #stateTrans test:
     stateTrans = [phone + '_' + str(stateid) for phone in phoneTrans
                   for stateid in range(nstates[phone])]
-    # np.testing.assert_almost_equal(stateTrans, example['stateTrans'], 6)
 
-    viterbiStateTrans, viterbiPath = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
-    # np.testing.assert_almost_equal(viterbiStateTrans, example['viterbiStateTrans'], 6)
-    # np.testing.assert_almost_equal(viterbiPath, example['viterbiPath'], 6)
+    test = True
+    for i, val in enumerate(stateTrans):
+        test = test and (val == example["stateTrans"][i])
+
+    if test:
+        print("\tstateTrans is correct.")
+    else:
+        print("\tstateTrans is NOT correct!")
+
+
+    # forcedAlignement test:
+    force_aligned = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+    
+    test = True
+    for i, val in enumerate(force_aligned[0]):
+        test = test and (val == example["viterbiStateTrans"][i])
+    
+    if test:
+        print("\tforcedAlignement is correct.")
+    else:
+        print("\tforcedAlignement is NOT correct!")
 
     #Check success in wavesurfer
-    frames2trans(viterbiStateTrans, outfilename='z43a.lab')
+    frames2trans(force_aligned[0], outfilename='z43a.lab')
 
     ## 4.3 Feature Extraction
     extractFeatures()
 
     ## Split Data
     train_data = np.load('traindata.npz', allow_pickle=True)['traindata']
-    train_val_split(train_data)
+    print(train_data)
+    
+    # train_val_split(train_data)
 
