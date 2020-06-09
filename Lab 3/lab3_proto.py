@@ -251,8 +251,11 @@ if __name__ == "__main__":
     extractFeatures()
 
     ## Split Data
+    # TODO: Make sure we save a copy of the val data and train data split, so that we can just use it whenever afterwards :)
+    
     train_data = np.load('traindata.npz', allow_pickle=True)['traindata']
     print(train_data)
     
     # train_val_split(train_data)
+
 
