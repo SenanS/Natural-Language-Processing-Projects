@@ -103,6 +103,10 @@ def hmmLoop(hmmmodels, namelist=None):
 
 
 def extractFeatures():
+    phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+    phones = sorted(phoneHMMs.keys())
+    nstates = {phone: phoneHMMs_all[phone]['means'].shape[0] for phone in phones}
+    stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
 
     traindata = []
     for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/train'):
@@ -110,19 +114,40 @@ def extractFeatures():
             if file.endswith('.wav'):
                 filename = os.path.join(root, file)
                 samples, samplingrate = loadAudio(filename)
-                #your code for feature extraction and forced alignment
+                # Feature extraction
+                lmfcc = mfcc(samples)
+                mspec_val = mspec(samples, samplingrate=samplingrate)
+                
+                # Forced alignement:
+                wordTrans = list(path2info(filename)[2])
+                phoneTrans = words2phones(wordTrans, prondict)
+                targets = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+                targets = [stateList.index(t) for t in targets]
+
                 traindata.append({'filename': filename, 'lmfcc': lmfcc,
-                                  'mspec': 'mspec', 'targets': targets})
+                                  'mspec': mspec_val, 'targets': targets})
 
     testdata = []
-    for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/test'):
+    for root, dirs, files in os.walk('tidigits/disc_4.2.1/tidigits/test'):
         for file in files:
             if file.endswith('.wav'):
                 filename = os.path.join(root, file)
                 samples, samplingrate = loadAudio(filename)
                 # your code for feature extraction and forced alignment
+                lmfcc = mfcc(samples)
+                mspec_val = mspec(samples, samplingrate=samplingrate)
+
+                # Forced alignement:
+                wordTrans = list(path2info(filename)[2])
+                phoneTrans = words2phones(wordTrans, prondict)
+                targets = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+                targets = [stateList.index(t) for t in targets]
+
                 testdata.append({'filename': filename, 'lmfcc': lmfcc,
-                                  'mspec': 'mspec', 'targets': targets})
+                                  'mspec': mspec_val, 'targets': targets})
+
+    print(testdata)
+    print(traindata)
     np.savez('testdata.npz', testdata=testdata)
     np.savez('traindata.npz', traindata=traindata)
 
@@ -221,6 +246,8 @@ if __name__ == "__main__":
 
 
     ##                                      4.3 Feature Extraction                                      ##
+
+    print("\n\nStarting feature extraction...")
     extractFeatures()
 
     ## Split Data
