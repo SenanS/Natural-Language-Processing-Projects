@@ -105,7 +105,7 @@ def hmmLoop(hmmmodels, namelist=None):
 def extractFeatures():
     phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
     phones = sorted(phoneHMMs.keys())
-    nstates = {phone: phoneHMMs_all[phone]['means'].shape[0] for phone in phones}
+    nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
 
     traindata = []
@@ -146,8 +146,8 @@ def extractFeatures():
                 testdata.append({'filename': filename, 'lmfcc': lmfcc,
                                   'mspec': mspec_val, 'targets': targets})
 
-    print(testdata)
-    print(traindata)
+    #print(testdata)
+    #print(traindata)
     np.savez('testdata.npz', testdata=testdata)
     np.savez('traindata.npz', traindata=traindata)
 
@@ -252,9 +252,9 @@ if __name__ == "__main__":
 
     ## Split Data
     # TODO: Make sure we save a copy of the val data and train data split, so that we can just use it whenever afterwards :)
-    
+
     train_data = np.load('traindata.npz', allow_pickle=True)['traindata']
-    print(train_data)
+    # print(train_data)
     
     # train_val_split(train_data)
 
