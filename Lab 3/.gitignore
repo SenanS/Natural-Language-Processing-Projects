@@ -1,3 +1,8 @@
 # Add __pycache__ to gitignore
 
 __pycache__/
+
+
+# Add tidigits database to gitignore as it is copyrighted
+
+tidigits/
