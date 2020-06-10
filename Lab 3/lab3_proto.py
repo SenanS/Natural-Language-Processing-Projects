@@ -146,10 +146,10 @@ def extractFeatures():
                 testdata.append({'filename': filename, 'lmfcc': lmfcc,
                                   'mspec': mspec_val, 'targets': targets})
 
-    #print(testdata)
-    #print(traindata)
+    print("Feature extraction performed, saving...")
     np.savez('testdata.npz', testdata=testdata)
     np.savez('traindata.npz', traindata=traindata)
+    print("Feature extraction saved.")
 
 
 if __name__ == "__main__":
