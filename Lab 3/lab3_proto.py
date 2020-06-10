@@ -140,7 +140,7 @@ def extractFeatures():
                 # Forced alignement:
                 wordTrans = list(path2info(filename)[2])
                 phoneTrans = words2phones(wordTrans, prondict)
-                targets = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+                targets, path = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
                 targets = [stateList.index(t) for t in targets]
 
                 testdata.append({'filename': filename, 'lmfcc': lmfcc,
