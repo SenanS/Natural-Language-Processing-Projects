@@ -107,7 +107,7 @@ def extractFeatures():
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
-
+    
     traindata = []
     for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/train'):
         for file in files:
@@ -121,7 +121,7 @@ def extractFeatures():
                 # Forced alignement:
                 wordTrans = list(path2info(filename)[2])
                 phoneTrans = words2phones(wordTrans, prondict)
-                targets = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+                targets, path = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
                 targets = [stateList.index(t) for t in targets]
 
                 traindata.append({'filename': filename, 'lmfcc': lmfcc,
