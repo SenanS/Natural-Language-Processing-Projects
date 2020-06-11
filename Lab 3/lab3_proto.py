@@ -166,6 +166,98 @@ def train_val_split(train_data):
     np.savez('data/val_data.npz', val_data=val_data)
 
 
+def regular_features(dataset):
+    # LMFCC dimension = 13 wide
+    dim_LMFCC = train_data[0]['lmfcc'].shape[1]
+    # MSPEC dimension = 40 wide
+    dim_MSPEC = train_data[0]['mspec'].shape[1]
+    # N = the sum of the sizes of each LMFCC, MSPEC or Targets
+    N = sum((x['lmfcc']).shape[0] for x in dataset)
+
+    lmfcc_acoustic_context = np.zeros((N, dim_LMFCC))
+    mspec_acoustic_context = np.zeros((N, dim_MSPEC))
+
+    i = 0
+    for utterance in tqdm(dataset):
+        iterations = len(utterance['targets'])
+        for n in range(iterations):
+            lmfcc_acoustic_context[i, :] = utterance['lmfcc'][n, :]
+            mspec_acoustic_context[i, :] = utterance['mspec'][n, :]
+            i += 1
+    return lmfcc_acoustic_context, mspec_acoustic_context
+
+
+def dynamic_features(dataset):
+    # (LMFCC dimension = 13) * 7, to get a stack of 7
+    dim_LMFCC = train_data[0]['lmfcc'].shape[1] * 7
+    # (MSPEC dimension = 40) * 7, to get a stack of 7
+    dim_MSPEC = train_data[0]['mspec'].shape[1] * 7
+    # N = the sum of the sizes of each LMFCC, MSPEC or Targets
+    N = sum((x['lmfcc']).shape[0] for x in dataset)
+
+    lmfcc_acoustic_context = np.zeros((N, dim_LMFCC))
+    mspec_acoustic_context = np.zeros((N, dim_MSPEC))
+    targets = []
+
+    order = np.array([
+        [3, 2, 1, 0, 1, 2, 3],
+        [2, 1, 0, 1, 2, 3, 4],
+        [1, 0, 1, 2, 3, 4, 5],
+        [3, 2, 1, 0, 1, 2, 3],
+        [4, 3, 2, 1, 0, 1, 2],
+        [5, 4, 3, 2, 1, 0, 1]
+    ])
+
+    i = 0
+    for utterance in tqdm(dataset):
+        iterations = len(utterance['targets'])
+        for n in range(iterations):
+            if n < 3:
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][order[n], :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][order[n], :])
+
+            elif n > iterations - 4:
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][n - order[(iterations - n) + 2], :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][n - order[(iterations - n) + 2], :])
+
+            else:
+                # Else just look at the 3 values either side of the current
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][np.arange(n - 3, n + 4), :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][np.arange(n - 3, n + 4), :])
+            i += 1
+        targets += utterance['targets']
+    return lmfcc_acoustic_context, mspec_acoustic_context, targets
+
+
+def create_features(train, val, test):
+    # Saving all features.
+
+    lmfcc_train_x, mspec_train_x, = regular_features(train)
+    lmfcc_val_x, mspec_val_x = regular_features(val)
+    lmfcc_test_x, mspec_test_x = regular_features(test)
+
+    np.savez('data/features/lmfcc_train_x.npz', lmfcc_train_x)
+    np.savez('data/features/mspec_train_x.npz', mspec_train_x)
+    np.savez('data/features/lmfcc_val_x.npz', lmfcc_val_x)
+    np.savez('data/features/mspec_val_x.npz', mspec_val_x)
+    np.savez('data/features/lmfcc_test_x.npz', lmfcc_test_x)
+    np.savez('data/features/mspec_test_x.npz', mspec_test_x)
+
+    dlmfcc_train_x, dmspec_train_x, train_y = dynamic_features(train)
+    dlmfcc_val_x, dmspec_val_x, val_y = dynamic_features(val)
+    dlmfcc_test_x, dmspec_test_x, test_y = dynamic_features(test)
+
+    np.savez('data/features/dlmfcc_train_x.npz', dlmfcc_train_x)
+    np.savez('data/features/dmspec_train_x.npz', dmspec_train_x)
+    np.savez('data/features/train_y.npz', train_y)
+    np.savez('data/features/dlmfcc_val_x.npz', dlmfcc_val_x)
+    np.savez('data/features/dmspec_val_x.npz', dmspec_val_x)
+    np.savez('data/features/val_y.npz', val_y)
+    np.savez('data/features/dlmfcc_test_x.npz', dlmfcc_test_x)
+    np.savez('data/features/dmspec_test_x.npz', dmspec_test_x)
+    np.savez('data/features/test_y.npz', test_y)
+
+
 if __name__ == "__main__":
     ##                                      4.1 Load all possible Phones & their states.                                        ##
 
@@ -272,10 +364,11 @@ if __name__ == "__main__":
         train_val_split(train_data)
     
     train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
-
     val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
-
+    test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
     print("Shape of train data after split: " + str(train_data.shape))
     print("Shape of val data after split: " + str(val_data.shape))
     print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
+
+    create_features(train_data, val_data, test_data)
