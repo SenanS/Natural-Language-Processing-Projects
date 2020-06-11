@@ -97,4 +97,6 @@ if __name__ == "__main__":
 
     # idk; maybe save the best models? might be worth something....
     for i in range(len(x_all)):
-        model, best_model = network(x_all[i], y_all[i], epochs = 10)
+        model1, best_model1 = network(x_all[i], y_all[i], epochs = 10, layers = 1)
+        model4, best_model4 = network(x_all[i], y_all[i], epochs = 10)
+
