@@ -9,8 +9,8 @@ from lab3_tools import *
 import pysndfile
 from tqdm import tqdm
 
-# np.seterr(divide='ignore')
 np.seterr(divide='ignore', invalid='ignore')
+
 
 def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
     """ word2phones: converts word level to phone level transcription adding silence
@@ -23,7 +23,7 @@ def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
     Output:
         list of phone symbols
     """
-    
+
     phone_list = []
     for digit in wordList:
         if addShortPause:
@@ -108,7 +108,7 @@ def extractFeatures():
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
-    
+
     traindata = []
     for root, dirs, files in os.walk('tidigits/disc_4.1.1/tidigits/train'):
         for file in files:
@@ -118,7 +118,7 @@ def extractFeatures():
                 # Feature extraction
                 lmfcc = mfcc(samples)
                 mspec_val = mspec(samples, samplingrate=samplingrate)
-                
+
                 # Forced alignement:
                 wordTrans = list(path2info(filename)[2])
                 phoneTrans = words2phones(wordTrans, prondict)
@@ -145,12 +145,13 @@ def extractFeatures():
                 targets = [stateList.index(t) for t in targets]
 
                 testdata.append({'filename': filename, 'lmfcc': lmfcc,
-                                  'mspec': mspec_val, 'targets': targets})
+                                 'mspec': mspec_val, 'targets': targets})
 
     print("Feature extraction performed, saving...")
-    np.savez('testdata.npz', testdata=testdata)
-    np.savez('traindata.npz', traindata=traindata)
+    np.savez('data/testdata.npz', testdata=testdata)
+    np.savez('data/traindata.npz', traindata=traindata)
     print("Feature extraction saved.")
+
 
 def train_val_split(train_data):
     speakerIDs = ['ae', 'aj', 'al', 'aw', 'bd', 'ac', 'ag', 'ai', 'an', 'bh', 'bi']
@@ -166,6 +167,98 @@ def train_val_split(train_data):
     np.savez('data/val_data.npz', val_data=val_data)
 
 
+def regular_features(dataset):
+    # LMFCC dimension = 13 wide
+    dim_LMFCC = train_data[0]['lmfcc'].shape[1]
+    # MSPEC dimension = 40 wide
+    dim_MSPEC = train_data[0]['mspec'].shape[1]
+    # N = the sum of the sizes of each LMFCC, MSPEC or Targets
+    N = sum((x['lmfcc']).shape[0] for x in dataset)
+
+    lmfcc_acoustic_context = np.zeros((N, dim_LMFCC))
+    mspec_acoustic_context = np.zeros((N, dim_MSPEC))
+
+    i = 0
+    for utterance in tqdm(dataset):
+        iterations = len(utterance['targets'])
+        for n in range(iterations):
+            lmfcc_acoustic_context[i, :] = utterance['lmfcc'][n, :]
+            mspec_acoustic_context[i, :] = utterance['mspec'][n, :]
+            i += 1
+    return lmfcc_acoustic_context, mspec_acoustic_context
+
+
+def dynamic_features(dataset):
+    # (LMFCC dimension = 13) * 7, to get a stack of 7
+    dim_LMFCC = train_data[0]['lmfcc'].shape[1] * 7
+    # (MSPEC dimension = 40) * 7, to get a stack of 7
+    dim_MSPEC = train_data[0]['mspec'].shape[1] * 7
+    # N = the sum of the sizes of each LMFCC, MSPEC or Targets
+    N = sum((x['lmfcc']).shape[0] for x in dataset)
+
+    lmfcc_acoustic_context = np.zeros((N, dim_LMFCC))
+    mspec_acoustic_context = np.zeros((N, dim_MSPEC))
+    targets = []
+
+    order = np.array([
+        [3, 2, 1, 0, 1, 2, 3],
+        [2, 1, 0, 1, 2, 3, 4],
+        [1, 0, 1, 2, 3, 4, 5],
+        [3, 2, 1, 0, 1, 2, 3],
+        [4, 3, 2, 1, 0, 1, 2],
+        [5, 4, 3, 2, 1, 0, 1]
+    ])
+
+    i = 0
+    for utterance in tqdm(dataset):
+        iterations = len(utterance['targets'])
+        for n in range(iterations):
+            if n < 3:
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][order[n], :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][order[n], :])
+
+            elif n > iterations - 4:
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][n - order[(iterations - n) + 2], :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][n - order[(iterations - n) + 2], :])
+
+            else:
+                # Else just look at the 3 values either side of the current
+                lmfcc_acoustic_context[i, :] = np.hstack(utterance['lmfcc'][np.arange(n - 3, n + 4), :])
+                mspec_acoustic_context[i, :] = np.hstack(utterance['mspec'][np.arange(n - 3, n + 4), :])
+            i += 1
+        targets += utterance['targets']
+    return lmfcc_acoustic_context, mspec_acoustic_context, targets
+
+
+def create_features(train, val, test):
+    # Saving all features.
+
+    lmfcc_train_x, mspec_train_x, = regular_features(train)
+    lmfcc_val_x, mspec_val_x = regular_features(val)
+    lmfcc_test_x, mspec_test_x = regular_features(test)
+
+    np.savez('data/features/lmfcc_train_x.npz', lmfcc_train_x)
+    np.savez('data/features/mspec_train_x.npz', mspec_train_x)
+    np.savez('data/features/lmfcc_val_x.npz', lmfcc_val_x)
+    np.savez('data/features/mspec_val_x.npz', mspec_val_x)
+    np.savez('data/features/lmfcc_test_x.npz', lmfcc_test_x)
+    np.savez('data/features/mspec_test_x.npz', mspec_test_x)
+
+    dlmfcc_train_x, dmspec_train_x, train_y = dynamic_features(train)
+    dlmfcc_val_x, dmspec_val_x, val_y = dynamic_features(val)
+    dlmfcc_test_x, dmspec_test_x, test_y = dynamic_features(test)
+
+    np.savez('data/features/dlmfcc_train_x.npz', dlmfcc_train_x)
+    np.savez('data/features/dmspec_train_x.npz', dmspec_train_x)
+    np.savez('data/features/train_y.npz', train_y)
+    np.savez('data/features/dlmfcc_val_x.npz', dlmfcc_val_x)
+    np.savez('data/features/dmspec_val_x.npz', dmspec_val_x)
+    np.savez('data/features/val_y.npz', val_y)
+    np.savez('data/features/dlmfcc_test_x.npz', dlmfcc_test_x)
+    np.savez('data/features/dmspec_test_x.npz', dmspec_test_x)
+    np.savez('data/features/test_y.npz', test_y)
+
+
 if __name__ == "__main__":
     ##                                      4.1 Load all possible Phones & their states.                                        ##
 
@@ -176,27 +269,16 @@ if __name__ == "__main__":
 
     ## Maybe save this stateList to a file, to preserve stability.
 
-    ## setting up isolated pronounciations:
-    # isolated = {}
-    # for digit in prondict.keys():
-    #     isolated[digit] = ['sil'] + prondict[digit] + ['sil']
-    #
-    # wordHMMs = {}
-    # for digit in isolated.keys():
-    #     wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
-
     ##Loading examples
     example = np.load('lab3_example.npz', allow_pickle=True)['example'].item()
-
-
 
     ##                                      4.2 Forcefully aligning transcripts of data                                     ##
 
     # This is done by concatting HMM of utterance & using viterbi to find best path
     # TODO: test each function below against example data
-    # filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
+    filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
     print("Running tests for each function against example data:\n")
-    filename = 'z43a.wav'
+    # filename = 'z43a.wav'
     samples, samplingrate = loadAudio(filename)
     np.testing.assert_almost_equal(samples, example['samples'], 6)
     print("\tSample assert passed.")
@@ -205,7 +287,6 @@ if __name__ == "__main__":
     lmfcc = mfcc(samples)
     np.testing.assert_almost_equal(lmfcc, example['lmfcc'], 6)
     print("\tlmfcc assert passed.")
-
 
     # phoneme transcription
     wordTrans = list(path2info(filename)[2])
@@ -220,15 +301,13 @@ if __name__ == "__main__":
     else:
         print("\tphoneTrans is NOT correct!")
 
-
     # utteranceHMM test:
     utteranceHMM = concatHMMs(phoneHMMs, phoneTrans)
     for i, val in example['utteranceHMM'].items():
         np.testing.assert_almost_equal(utteranceHMM[i], example['utteranceHMM'][i], 6)
     print("\tUtteranceHMM assert passed.")
 
-
-    #stateTrans test:
+    # stateTrans test:
     stateTrans = [phone + '_' + str(stateid) for phone in phoneTrans
                   for stateid in range(nstates[phone])]
 
@@ -241,23 +320,20 @@ if __name__ == "__main__":
     else:
         print("\tstateTrans is NOT correct!")
 
-
     # forcedAlignement test:
     force_aligned = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
-    
+
     test = True
     for i, val in enumerate(force_aligned[0]):
         test = test and (val == example["viterbiStateTrans"][i])
-    
+
     if test:
-        print("\tforcedAlignement is correct.")
+        print("\tforcedAlignment is correct.")
     else:
-        print("\tforcedAlignement is NOT correct!")
+        print("\tforcedAlignment is NOT correct!")
 
-    #Check success in wavesurfer
+    # Check success in wavesurfer
     frames2trans(force_aligned[0], outfilename='z43a.lab')
-
-
 
     ##                                      4.3 Feature Extraction                                      ##
 
@@ -270,12 +346,23 @@ if __name__ == "__main__":
         train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
         # print(train_data.shape)
         train_val_split(train_data)
-    
+
     train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
-
     val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
+    test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
 
-    print("Shape of train data after split: " + str(train_data.shape))
-    print("Shape of val data after split: " + str(val_data.shape))
-    print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
+    train_data = np.load('traindata.npz', allow_pickle=True)['traindata']
+    # print(train_data)
 
+    # train_val_split(train_data)
+
+    create_features(train_data, val_data, test_data)
+
+    print(0)
+    ##                                      4.4 Dynamic Features                                      ##
+
+    create_features(train_data, val_data, test_data)
+
+    # print(0)
+
+    ##                                      4.5 Feature Standardisation                                      ##
