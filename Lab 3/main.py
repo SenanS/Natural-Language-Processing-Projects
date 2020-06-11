@@ -109,3 +109,31 @@ if __name__ == "__main__":
         
         model1, best_model1 = network(x_all[i], y_all[i], epochs = 10, layers = 1, name=name + "_1layer")
         model4, best_model4 = network(x_all[i], y_all[i], epochs = 10, name=name + "_4layer")
+
+    # Detailed evaluation:
+
+    """
+    Detailed evaluation description:
+
+        1. frame-by-frame at the state level: 
+            count the number of frames (time steps) that were correctly classified over the total
+
+        2. frame-by-frame at the phoneme level: 
+            same as 1., but merge all states that correspond to the same phoneme, for example ox_0, ox_1 and ox_2 are merged to ox
+
+        3. edit distance at the state level: 
+        convert the frame-by-frame sequence of classifications into a transcription by merging all the consequent identical states, 
+        for example:  
+            ox_0 ox_0 ox_0 ox_1 ox_1 ox_2 ox_2 ox_2 ox_2... becomes ox_0 ox_1 ox_2 .... 
+        
+        Then measure the Phone Error Rate (PER), that is the length normalised edit distance between the sequence
+        of states from the DNN and the correct transcription (that has also been converted this way).
+
+        4. edit distance at the phoneme level: 
+            same as 3. but merging the states into phonemes as in 2.
+    """
+
+    # load the two models we want:
+
+    # then perform the detailed evaluation:
+    # isn't 1. just our normal accuracy? I think so?
