@@ -166,7 +166,6 @@ def train_val_split(train_data):
     np.savez('data/val_data.npz', val_data=val_data)
 
 
-
 def regular_features(dataset):
     # LMFCC dimension = 13 wide
     dim_LMFCC = train_data[0]['lmfcc'].shape[1]
@@ -257,7 +256,6 @@ def create_features(train, val, test):
     np.savez('data/features/dlmfcc_test_x.npz', dlmfcc_test_x)
     np.savez('data/features/dmspec_test_x.npz', dmspec_test_x)
     np.savez('data/features/test_y.npz', test_y)
-
 
 
 if __name__ == "__main__":
