@@ -7,6 +7,7 @@ from lab2_proto import *
 from lab2_tools import *
 from lab3_tools import *
 import pysndfile
+from tqdm import tqdm
 
 # np.seterr(divide='ignore')
 np.seterr(divide='ignore', invalid='ignore')
@@ -151,6 +152,19 @@ def extractFeatures():
     np.savez('traindata.npz', traindata=traindata)
     print("Feature extraction saved.")
 
+def train_val_split(train_data):
+    speakerIDs = ['ae', 'aj', 'al', 'aw', 'bd', 'ac', 'ag', 'ai', 'an', 'bh', 'bi']
+    val_data = []
+    train_data_split = []
+    for i in tqdm(range(len(train_data))):
+        gender, speakerID, digits, repetition = path2info(train_data[i]['filename'])
+        if speakerID in speakerIDs:
+            val_data.append(train_data[i])
+        else:
+            train_data_split.append(train_data[i])
+    np.savez('data/train_data_split.npz', train_data_split=train_data_split)
+    np.savez('data/val_data.npz', val_data=val_data)
+
 
 if __name__ == "__main__":
     ##                                      4.1 Load all possible Phones & their states.                                        ##
@@ -247,15 +261,21 @@ if __name__ == "__main__":
 
     ##                                      4.3 Feature Extraction                                      ##
 
-    print("\n\nStarting feature extraction...")
-    extractFeatures()
+    if False:
+        print("\n\nStarting feature extraction...")
+        extractFeatures()
 
-    ## Split Data
-    # TODO: Make sure we save a copy of the val data and train data split, so that we can just use it whenever afterwards :)
-
-    train_data = np.load('traindata.npz', allow_pickle=True)['traindata']
-    # print(train_data)
+    # Split data:
+    if False:
+        train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
+        # print(train_data.shape)
+        train_val_split(train_data)
     
-    # train_val_split(train_data)
+    train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
 
+    val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
+
+    print("Shape of train data after split: " + str(train_data.shape))
+    print("Shape of val data after split: " + str(val_data.shape))
+    print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
