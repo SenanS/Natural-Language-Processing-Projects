@@ -6,3 +6,5 @@ __pycache__/
 # Add tidigits database to gitignore as it is copyrighted
 
 tidigits/
+
+data/
