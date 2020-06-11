@@ -3,7 +3,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 
 
-def network(data, labels, epochs=20, batch_size=256, layers=4):
+def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
 
     x, x_val, x_test = data
     y, y_val, y_test = labels
@@ -35,7 +35,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4):
 
 
     # Setting up training checkpoint, for the best model:
-    checkpoint = keras.callbacks.ModelCheckpoint('best_model_test1', verbose=1, monitor='val_loss', save_best_only=True, mode='min')
+    checkpoint = keras.callbacks.ModelCheckpoint("best_model_" + name + ".h5", verbose=1, monitor='val_loss', save_best_only=True, mode='min')
     validation = (x_val, y_val)
 
     # Tensorboard, to be able to view training:
@@ -53,7 +53,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4):
     """
 
     # Evaluation using the test set:
-    saved_model = keras.models.load_model('best_model_test1')
+    saved_model = keras.models.load_model("best_model_" + name + ".h5")
 
     accuracy = saved_model.evaluate(x_test, y_test)
     print("Final score for the best saved model: " + str(accuracy))
@@ -97,6 +97,15 @@ if __name__ == "__main__":
 
     # idk; maybe save the best models? might be worth something....
     for i in range(len(x_all)):
-        model1, best_model1 = network(x_all[i], y_all[i], epochs = 10, layers = 1)
-        model4, best_model4 = network(x_all[i], y_all[i], epochs = 10)
-
+        name = ""
+        if i == 0:
+            name = "lmfcc"
+        elif i == 1:
+            name = "filterbank"
+        elif i == 2:
+            name = "lmfcc_dyn"
+        else:
+            name = "filterbank_dyn"
+        
+        model1, best_model1 = network(x_all[i], y_all[i], epochs = 10, layers = 1, name=name + "_1layer")
+        model4, best_model4 = network(x_all[i], y_all[i], epochs = 10, name=name + "_4layer")
