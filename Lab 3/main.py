@@ -3,7 +3,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 
 
-def network(data, labels, epochs=20, batch_size=128):
+def network(data, labels, epochs=20, batch_size=256, layers=4):
 
     x, x_val, x_test = data
     y, y_val, y_test = labels
@@ -15,26 +15,24 @@ def network(data, labels, epochs=20, batch_size=128):
     model = Sequential()
 
 
-    # Setting up four layers - tests for how these should be done could be done...
+    # Setting up x layers - tests for how these should be done could be done more extensively given time...
     # Layer 1
     model.add(Dense(256, input_dim=n_features, kernel_initializer='he_normal'))
     model.add(Activation('relu'))
 
-    # Layer 2
-    model.add(Dense(512, input_dim=256, kernel_initializer='he_normal'))
-    model.add(Activation('relu'))
+    for x in range(layers-1):
+        # Layer 2
+        model.add(Dense(256, input_dim=256, kernel_initializer='he_normal'))
+        model.add(Activation('relu'))
 
-    # Layer 3
-    model.add(Dense(512, input_dim=512, kernel_initializer='he_normal'))
-    model.add(Activation('relu'))
-
-    # Layer 4
-    model.add(Dense(n_phones, input_dim=512, kernel_initializer='he_normal'))
+    # Output layer
+    model.add(Dense(n_phones, input_dim=256, kernel_initializer='he_normal'))
     model.add(Activation('softmax'))
 
 
-    # Define compiler:
+    # Define compiler, could use "sgd" instead of "adam":
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy", "categorical_accuracy"])
+
 
     # Setting up training checkpoint, for the best model:
     checkpoint = keras.callbacks.ModelCheckpoint('best_model_test1', verbose=1, monitor='val_loss', save_best_only=True, mode='min')
@@ -68,4 +66,4 @@ def network(data, labels, epochs=20, batch_size=128):
 if __name__ == "__main__":
     # Load data, then use dynamic features + normalization, then call NN
 
-    network(data[0],data[1], epochs = 5, batch_size=256)
+    network(data[0],data[1], epochs = 5)
