@@ -61,9 +61,40 @@ def network(data, labels, epochs=20, batch_size=256, layers=4):
         print(model.metrics_names[i], ": ", accuracy[i])
 
 
-    return model
+    return model, saved_model
 
 if __name__ == "__main__":
     # Load data, then use dynamic features + normalization, then call NN
 
-    network(data[0],data[1], epochs = 5)
+    """
+    Specification of tests: (we can do only the 1 layer and 4 layers)
+
+        1. input: liftered MFCCs, one to four hidden layers of size 256, rectified linear units
+        2. input: filterbank features, one to four hidden layers of size 256, rectified linear units
+        3. same as 1. but with dynamic features as explained in Section 4.5
+        4. same as 2. but with dynamic features as explained in Section 4.5
+        Note the evolution of the loss function and the accuracy of the model f
+
+    """
+    x_all = []
+    y_all = []
+
+    # LMFCC
+    x_all.append([x_lmfcc, x_lmfxx_val, x_lmfcc_test])
+    y_all.append([y_lmfcc, y_lmfxx_val, y_lmfcc_test])
+
+    # Filterbank
+    x_all.append([x_filter, x_filter_val, x_filter_test])
+    y_all.append([y_filter, y_filter_val, y_filter_test])
+
+    # Dynamic features LMFCC:
+    x_all.append([x_lmfcc_dyn, x_lmfxx_val_dyn, x_lmfcc_test_dyn])
+    y_all.append([y_lmfcc_dyn, y_lmfxx_val_dyn, y_lmfcc_test_dyn])
+
+    # Filterbank
+    x_all.append([x_filter_dyn, x_filter_val_dyn, x_filter_test_dyn])
+    y_all.append([y_filter_dyn, y_filter_val_dyn, y_filter_test_dyn])
+
+    # idk; maybe save the best models? might be worth something....
+    for i in range(len(x_all)):
+        model, best_model = network(x_all[i], y_all[i], epochs = 10)
