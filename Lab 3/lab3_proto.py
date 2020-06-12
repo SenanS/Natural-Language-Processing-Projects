@@ -14,6 +14,7 @@ from keras.utils import np_utils
 # np.seterr(divide='ignore')
 np.seterr(divide='ignore', invalid='ignore')
 
+
 def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
     """ word2phones: converts word level to phone level transcription adding silence
 
@@ -37,7 +38,6 @@ def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
         phone_list = ["sil"] + phone_list + ["sil"]
 
     return phone_list
-
 
 def forcedAlignment(lmfcc, phoneHMMs, phoneTrans):
     """ forcedAlignmen: aligns a phonetic transcription at the state level
@@ -71,7 +71,6 @@ def forcedAlignment(lmfcc, phoneHMMs, phoneTrans):
     result = [stateTrans[i] for i in viterbi_path.astype(np.int64)]
 
     return result, viterbi_path
-
 
 def hmmLoop(hmmmodels, namelist=None):
     """ Combines HMM models in a loop
@@ -330,115 +329,99 @@ if __name__ == "__main__":
 
     load_and_standardise(stateList)
 
-    ## Maybe save this stateList to a file, to preserve stability.
-
-    ## setting up isolated pronounciations:
-    # isolated = {}
-    # for digit in prondict.keys():
-    #     isolated[digit] = ['sil'] + prondict[digit] + ['sil']
+    # ## Maybe save this stateList to a file, to preserve stability.
     #
-    # wordHMMs = {}
-    # for digit in isolated.keys():
-    #     wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
-
-    ##Loading examples
-    example = np.load('lab3_example.npz', allow_pickle=True)['example'].item()
-
-
-
-    ##                                      4.2 Forcefully aligning transcripts of data                                     ##
-
-    # This is done by concatting HMM of utterance & using viterbi to find best path
-    # TODO: test each function below against example data
-    # filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
-    print("Running tests for each function against example data:\n")
-    filename = 'z43a.wav'
-    samples, samplingrate = loadAudio(filename)
-    np.testing.assert_almost_equal(samples, example['samples'], 6)
-    print("\tSample assert passed.")
-
-    # LMFCC test:
-    lmfcc = mfcc(samples)
-    np.testing.assert_almost_equal(lmfcc, example['lmfcc'], 6)
-    print("\tlmfcc assert passed.")
-
-
-    # phoneme transcription
-    wordTrans = list(path2info(filename)[2])
-    phoneTrans = words2phones(wordTrans, prondict, addSilence=True, addShortPause=True)
-
-    test = True
-    for i, val in enumerate(phoneTrans):
-        test = test and (val == example["phoneTrans"][i])
-
-    if test:
-        print("\tphoneTrans is correct.")
-    else:
-        print("\tphoneTrans is NOT correct!")
-
-
-    # utteranceHMM test:
-    utteranceHMM = concatHMMs(phoneHMMs, phoneTrans)
-    for i, val in example['utteranceHMM'].items():
-        np.testing.assert_almost_equal(utteranceHMM[i], example['utteranceHMM'][i], 6)
-    print("\tUtteranceHMM assert passed.")
-
-
-    #stateTrans test:
-    stateTrans = [phone + '_' + str(stateid) for phone in phoneTrans
-                  for stateid in range(nstates[phone])]
-
-    test = True
-    for i, val in enumerate(stateTrans):
-        test = test and (val == example["stateTrans"][i])
-
-    if test:
-        print("\tstateTrans is correct.")
-    else:
-        print("\tstateTrans is NOT correct!")
-
-
-    # forcedAlignement test:
-    force_aligned = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
-    
-    test = True
-    for i, val in enumerate(force_aligned[0]):
-        test = test and (val == example["viterbiStateTrans"][i])
-    
-    if test:
-        print("\tforcedAlignement is correct.")
-    else:
-        print("\tforcedAlignement is NOT correct!")
-
-    #Check success in wavesurfer
-    frames2trans(force_aligned[0], outfilename='z43a.lab')
-
-
-
-    ##                                      4.3 Feature Extraction                                      ##
-
-    if False:
-        print("\n\nStarting feature extraction...")
-        extractFeatures()
-
-    ##                                      4.4 Split Data                                      ##
-    if False:
-        train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
-        # print(train_data.shape)
-        train_val_split(train_data)
-    
-    train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
-    val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
-    test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
-    print("Shape of train data after split: " + str(train_data.shape))
-    print("Shape of val data after split: " + str(val_data.shape))
-    print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
-
-    ##                                      4.5 Dynamic Features                                      ##
+    # ##Loading examples
+    # example = np.load('lab3_example.npz', allow_pickle=True)['example'].item()
+    #
+    # ##                                      4.2 Forcefully aligning transcripts of data                                     ##
+    #
+    # # This is done by concatting HMM of utterance & using viterbi to find best path
+    # # TODO: test each function below against example data
+    # # filename = '../tidigits/disc_4.1.1/tidigits/train/man/nw/z43a.wav'
+    # print("Running tests for each function against example data:\n")
+    # filename = 'z43a.wav'
+    # samples, samplingrate = loadAudio(filename)
+    # np.testing.assert_almost_equal(samples, example['samples'], 6)
+    # print("\tSample assert passed.")
+    #
+    # # LMFCC test:
+    # lmfcc = mfcc(samples)
+    # np.testing.assert_almost_equal(lmfcc, example['lmfcc'], 6)
+    # print("\tlmfcc assert passed.")
+    #
+    # # phoneme transcription
+    # wordTrans = list(path2info(filename)[2])
+    # phoneTrans = words2phones(wordTrans, prondict, addSilence=True, addShortPause=True)
+    #
+    # test = True
+    # for i, val in enumerate(phoneTrans):
+    #     test = test and (val == example["phoneTrans"][i])
+    #
+    # if test:
+    #     print("\tphoneTrans is correct.")
+    # else:
+    #     print("\tphoneTrans is NOT correct!")
+    #
+    # # utteranceHMM test:
+    # utteranceHMM = concatHMMs(phoneHMMs, phoneTrans)
+    # for i, val in example['utteranceHMM'].items():
+    #     np.testing.assert_almost_equal(utteranceHMM[i], example['utteranceHMM'][i], 6)
+    # print("\tUtteranceHMM assert passed.")
+    #
+    #
+    # #stateTrans test:
+    # stateTrans = [phone + '_' + str(stateid) for phone in phoneTrans
+    #               for stateid in range(nstates[phone])]
+    #
+    # test = True
+    # for i, val in enumerate(stateTrans):
+    #     test = test and (val == example["stateTrans"][i])
+    #
+    # if test:
+    #     print("\tstateTrans is correct.")
+    # else:
+    #     print("\tstateTrans is NOT correct!")
+    #
+    # # forcedAlignement test:
+    # force_aligned = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+    #
+    # test = True
+    # for i, val in enumerate(force_aligned[0]):
+    #     test = test and (val == example["viterbiStateTrans"][i])
+    #
+    # if test:
+    #     print("\tforcedAlignment is correct.")
+    # else:
+    #     print("\tforcedAlignment is NOT correct!")
+    #
+    # # Check success in wavesurfer
+    # frames2trans(force_aligned[0], outfilename='z43a.lab')
+    #
+    # ##                                      4.3 Feature Extraction                                      ##
+    #
     # if False:
-    print("Individual dynamic and regular features created.")
-    create_features(train_data, val_data, test_data)
-
-    ##                                      4.6 Feature Standardisation                                     ##
-
-    load_and_standardise(stateList)
+    #     print("\n\nStarting feature extraction...")
+    #     extractFeatures()
+    #
+    # ##                                      4.4 Split Data                                      ##
+    # if False:
+    #     train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
+    #     # print(train_data.shape)
+    #     train_val_split(train_data)
+    #
+    # train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
+    # val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
+    # test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
+    # print("Shape of train data after split: " + str(train_data.shape))
+    # print("Shape of val data after split: " + str(val_data.shape))
+    # print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
+    #
+    # ##                                      4.5 Dynamic Features                                      ##
+    # # if False:
+    # print("Individual dynamic and regular features created.")
+    # create_features(train_data, val_data, test_data)
+    #
+    # ##                                      4.6 Feature Standardisation                                     ##
+    #
+    # load_and_standardise(stateList)
