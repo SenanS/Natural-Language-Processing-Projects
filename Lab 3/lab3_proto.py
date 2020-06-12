@@ -188,7 +188,6 @@ def regular_features(dataset):
             i += 1
     return lmfcc_acoustic_context, mspec_acoustic_context
 
-
 def dynamic_features(dataset):
     # (LMFCC dimension = 13) * 7, to get a stack of 7
     dim_LMFCC = train_data[0]['lmfcc'].shape[1] * 7
@@ -230,7 +229,6 @@ def dynamic_features(dataset):
         targets += utterance['targets']
     return lmfcc_acoustic_context, mspec_acoustic_context, targets
 
-
 def create_features(train, val, test):
     # Saving all features.
 
@@ -260,7 +258,6 @@ def create_features(train, val, test):
     np.savez('data/features/test_y.npz', test_y=test_y)
 
 
-
 def standardise_features(train_x, test_x, val_x):
     #Normalise each set of feature vectors
     scalar = StandardScaler().fit(train_x)
@@ -282,29 +279,29 @@ def standardise_targets(train_y, test_y, val_y, state_list):
 def load_and_standardise(state_list):
     #Load in, standardise and save each feature and target
 
-    lmfcc_train_x = np.load('data/features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
-    lmfcc_test_x = np.load('data/features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
-    lmfcc_val_x = np.load('data/features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
-    lmfcc_train_x, lmfcc_test_x, lmfcc_val_x = standardise_features(lmfcc_train_x, lmfcc_test_x, lmfcc_val_x)
-    np.savez('data/normalised features/lmfcc_train_x.npz', lmfcc_train_x=lmfcc_train_x)
-    np.savez('data/normalised features/lmfcc_test_x.npz', lmfcc_test_x=lmfcc_test_x)
-    np.savez('data/normalised features/lmfcc_val_x.npz', lmfcc_val_x=lmfcc_val_x)
-
-    dlmfcc_train_x = np.load('data/features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
-    dlmfcc_test_x = np.load('data/features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
-    dlmfcc_val_x = np.load('data/features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
-    dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x = standardise_features(dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x)
-    np.savez('data/normalised features/dlmfcc_train_x.npz', dlmfcc_train_x=dlmfcc_train_x)
-    np.savez('data/normalised features/dlmfcc_test_x.npz', dlmfcc_test_x=dlmfcc_test_x)
-    np.savez('data/normalised features/dlmfcc_val_x.npz', dlmfcc_val_x=dlmfcc_val_x)
-
-    mspec_train_x = np.load('data/features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
-    mspec_test_x = np.load('data/features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
-    mspec_val_x = np.load('data/features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
-    mspec_train_x, mspec_test_x, mspec_val_x = standardise_features(mspec_train_x, mspec_test_x, mspec_val_x)
-    np.savez('data/normalised features/mspec_train_x.npz', mspec_train_x=mspec_train_x)
-    np.savez('data/normalised features/mspec_test_x.npz', mspec_test_x=mspec_test_x)
-    np.savez('data/normalised features/mspec_val_x.npz', mspec_val_x=mspec_val_x)
+    # lmfcc_train_x = np.load('data/features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
+    # lmfcc_test_x = np.load('data/features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
+    # lmfcc_val_x = np.load('data/features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
+    # lmfcc_train_x, lmfcc_test_x, lmfcc_val_x = standardise_features(lmfcc_train_x, lmfcc_test_x, lmfcc_val_x)
+    # np.savez('data/normalised features/lmfcc_train_x.npz', lmfcc_train_x=lmfcc_train_x)
+    # np.savez('data/normalised features/lmfcc_test_x.npz', lmfcc_test_x=lmfcc_test_x)
+    # np.savez('data/normalised features/lmfcc_val_x.npz', lmfcc_val_x=lmfcc_val_x)
+    #
+    # dlmfcc_train_x = np.load('data/features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
+    # dlmfcc_test_x = np.load('data/features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
+    # dlmfcc_val_x = np.load('data/features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
+    # dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x = standardise_features(dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x)
+    # np.savez('data/normalised features/dlmfcc_train_x.npz', dlmfcc_train_x=dlmfcc_train_x)
+    # np.savez('data/normalised features/dlmfcc_test_x.npz', dlmfcc_test_x=dlmfcc_test_x)
+    # np.savez('data/normalised features/dlmfcc_val_x.npz', dlmfcc_val_x=dlmfcc_val_x)
+    #
+    # mspec_train_x = np.load('data/features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
+    # mspec_test_x = np.load('data/features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
+    # mspec_val_x = np.load('data/features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
+    # mspec_train_x, mspec_test_x, mspec_val_x = standardise_features(mspec_train_x, mspec_test_x, mspec_val_x)
+    # np.savez('data/normalised features/mspec_train_x.npz', mspec_train_x=mspec_train_x)
+    # np.savez('data/normalised features/mspec_test_x.npz', mspec_test_x=mspec_test_x)
+    # np.savez('data/normalised features/mspec_val_x.npz', mspec_val_x=mspec_val_x)
 
     dmspec_train_x = np.load('data/features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
     dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
@@ -330,6 +327,8 @@ if __name__ == "__main__":
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
+
+    load_and_standardise(stateList)
 
     ## Maybe save this stateList to a file, to preserve stability.
 
@@ -440,6 +439,6 @@ if __name__ == "__main__":
     print("Individual dynamic and regular features created.")
     create_features(train_data, val_data, test_data)
 
-    ##                                      4.5 Feature Standardisation                                     ##
+    ##                                      4.6 Feature Standardisation                                     ##
 
     load_and_standardise(stateList)
