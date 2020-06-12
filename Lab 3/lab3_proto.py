@@ -269,9 +269,9 @@ def standardise_features(train_x, test_x, val_x):
 
 def standardise_targets(train_y, test_y, val_y, state_list):
 
-    for data in [train_y, test_y, val_y]:
-        for idx, state in enumerate(data):
-            data[idx] = state_list.index(state)
+    # for data in [train_y, test_y, val_y]:
+    #     for idx, state in enumerate(data):
+    #         data[idx] = state_list.index(state)
 
     return np_utils.to_categorical(train_y, len(state_list)), np_utils.to_categorical(test_y, len(state_list)), np_utils.to_categorical(val_y, len(state_list))
 
