@@ -357,7 +357,7 @@ if __name__ == "__main__":
         print("\n\nStarting feature extraction...")
         extractFeatures()
 
-    # Split data:
+    ##                                      4.4 Split Data                                      ##
     if False:
         train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
         # print(train_data.shape)
@@ -370,5 +370,9 @@ if __name__ == "__main__":
     print("Shape of val data after split: " + str(val_data.shape))
     print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
+    ##                                      4.5 Dynamic Features                                      ##
+    if False:
+        print("Individual dynamic and regular features created.")
+        create_features(train_data, val_data, test_data)
 
-    create_features(train_data, val_data, test_data)
+    ##                                      4.5 Feature Standardisation                                     ##
