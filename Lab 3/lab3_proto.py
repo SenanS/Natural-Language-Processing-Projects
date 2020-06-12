@@ -302,20 +302,20 @@ def load_and_standardise(state_list):
     # np.savez('data/normalised features/mspec_test_x.npz', mspec_test_x=mspec_test_x)
     # np.savez('data/normalised features/mspec_val_x.npz', mspec_val_x=mspec_val_x)
 
-    dmspec_train_x = np.load('data/features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
-    dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
-    dmspec_val_x = np.load('data/features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
     # dmspec_train_x, dmspec_test_x, dmspec_val_x = standardise_features(dmspec_train_x, dmspec_test_x, dmspec_val_x)
     # np.savez('data/normalised features/dmspec_train_x.npz', dmspec_train_x=dmspec_train_x)
     # np.savez('data/normalised features/dmspec_test_x.npz', dmspec_test_x=dmspec_test_x)
     # np.savez('data/normalised features/dmspec_val_x.npz', dmspec_val_x=dmspec_val_x)
 
+    dmspec_train_x = np.load('data/features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
     scalar = StandardScaler().fit(dmspec_train_x)
     normal_train_x = scalar.transform(dmspec_train_x)
     np.savez('data/normalised features/dmspec_train_x.npz', dmspec_train_x=normal_train_x.astype('float32'))
-    normal_val_x = scalar.transform(dmspec_test_x)
+    dmspec_val_x = np.load('data/features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
+    normal_val_x = scalar.transform(dmspec_val_x)
     np.savez('data/normalised features/dmspec_val_x.npz', dmspec_val_x=normal_val_x.astype('float32'))
-    normal_test_x = scalar.transform(dmspec_val_x)
+    dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
+    normal_test_x = scalar.transform(dmspec_test_x)
     np.savez('data/normalised features/dmspec_test_x.npz', dmspec_test_x=normal_test_x.astype('float32'))
 
     train_y = np.load('data/features/train_y.npz', allow_pickle=True)['train_y']
