@@ -8,6 +8,8 @@ from lab2_tools import *
 from lab3_tools import *
 import pysndfile
 from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
+from keras.utils import np_utils
 
 # np.seterr(divide='ignore')
 np.seterr(divide='ignore', invalid='ignore')
@@ -236,26 +238,89 @@ def create_features(train, val, test):
     lmfcc_val_x, mspec_val_x = regular_features(val)
     lmfcc_test_x, mspec_test_x = regular_features(test)
 
-    np.savez('data/features/lmfcc_train_x.npz', lmfcc_train_x)
-    np.savez('data/features/mspec_train_x.npz', mspec_train_x)
-    np.savez('data/features/lmfcc_val_x.npz', lmfcc_val_x)
-    np.savez('data/features/mspec_val_x.npz', mspec_val_x)
-    np.savez('data/features/lmfcc_test_x.npz', lmfcc_test_x)
-    np.savez('data/features/mspec_test_x.npz', mspec_test_x)
+    np.savez('data/features/lmfcc_train_x.npz', lmfcc_train_x=lmfcc_train_x)
+    np.savez('data/features/mspec_train_x.npz', mspec_train_x=mspec_train_x)
+    np.savez('data/features/lmfcc_val_x.npz', lmfcc_val_x=lmfcc_val_x)
+    np.savez('data/features/mspec_val_x.npz', mspec_val_x=mspec_val_x)
+    np.savez('data/features/lmfcc_test_x.npz', lmfcc_test_x=lmfcc_test_x)
+    np.savez('data/features/mspec_test_x.npz', mspec_test_x=mspec_test_x)
 
     dlmfcc_train_x, dmspec_train_x, train_y = dynamic_features(train)
     dlmfcc_val_x, dmspec_val_x, val_y = dynamic_features(val)
     dlmfcc_test_x, dmspec_test_x, test_y = dynamic_features(test)
 
-    np.savez('data/features/dlmfcc_train_x.npz', dlmfcc_train_x)
-    np.savez('data/features/dmspec_train_x.npz', dmspec_train_x)
-    np.savez('data/features/train_y.npz', train_y)
-    np.savez('data/features/dlmfcc_val_x.npz', dlmfcc_val_x)
-    np.savez('data/features/dmspec_val_x.npz', dmspec_val_x)
-    np.savez('data/features/val_y.npz', val_y)
-    np.savez('data/features/dlmfcc_test_x.npz', dlmfcc_test_x)
-    np.savez('data/features/dmspec_test_x.npz', dmspec_test_x)
-    np.savez('data/features/test_y.npz', test_y)
+    np.savez('data/features/dlmfcc_train_x.npz', dlmfcc_train_x=dlmfcc_train_x)
+    np.savez('data/features/dmspec_train_x.npz', dmspec_train_x=dmspec_train_x)
+    np.savez('data/features/train_y.npz', train_y=train_y)
+    np.savez('data/features/dlmfcc_val_x.npz', dlmfcc_val_x=dlmfcc_val_x)
+    np.savez('data/features/dmspec_val_x.npz', dmspec_val_x=dmspec_val_x)
+    np.savez('data/features/val_y.npz', val_y=val_y)
+    np.savez('data/features/dlmfcc_test_x.npz', dlmfcc_test_x=dlmfcc_test_x)
+    np.savez('data/features/dmspec_test_x.npz', dmspec_test_x=dmspec_test_x)
+    np.savez('data/features/test_y.npz', test_y=test_y)
+
+
+
+def standardise_features(train_x, test_x, val_x):
+    #Normalise each set of feature vectors
+    scalar = StandardScaler().fit(train_x)
+
+    normal_train_x = scalar.transform(train_x)
+    normal_val_x = scalar.transform(val_x)
+    normal_test_x = scalar.transform(test_x)
+
+    return normal_train_x.astype('float32'), normal_test_x.astype('float32'), normal_val_x.astype('float32')
+
+def standardise_targets(train_y, test_y, val_y, state_list):
+
+    for data in [train_y, test_y, val_y]:
+        for idx, state in enumerate(data):
+            data[idx] = state_list.index(state)
+
+    return  np_utils.to_categorical(train_y, len(state_list)), np_utils.to_categorical(test_y, len(state_list)), np_utils.to_categorical(val_y, len(state_list))
+
+def load_and_standardise(state_list):
+    #Load in, standardise and save each feature and target
+
+    lmfcc_train_x = np.load('data/features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
+    lmfcc_test_x = np.load('data/features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
+    lmfcc_val_x = np.load('data/features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
+    lmfcc_train_x, lmfcc_test_x, lmfcc_val_x = standardise_features(lmfcc_train_x, lmfcc_test_x, lmfcc_val_x)
+    np.savez('data/normalised features/lmfcc_train_x.npz', lmfcc_train_x=lmfcc_train_x)
+    np.savez('data/normalised features/lmfcc_test_x.npz', lmfcc_test_x=lmfcc_test_x)
+    np.savez('data/normalised features/lmfcc_val_x.npz', lmfcc_val_x=lmfcc_val_x)
+
+    dlmfcc_train_x = np.load('data/features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
+    dlmfcc_test_x = np.load('data/features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
+    dlmfcc_val_x = np.load('data/features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
+    dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x = standardise_features(dlmfcc_train_x, dlmfcc_test_x, dlmfcc_val_x)
+    np.savez('data/normalised features/dlmfcc_train_x.npz', dlmfcc_train_x=dlmfcc_train_x)
+    np.savez('data/normalised features/dlmfcc_test_x.npz', dlmfcc_test_x=dlmfcc_test_x)
+    np.savez('data/normalised features/dlmfcc_val_x.npz', dlmfcc_val_x=dlmfcc_val_x)
+
+    mspec_train_x = np.load('data/features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
+    mspec_test_x = np.load('data/features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
+    mspec_val_x = np.load('data/features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
+    mspec_train_x, mspec_test_x, mspec_val_x = standardise_features(mspec_train_x, mspec_test_x, mspec_val_x)
+    np.savez('data/normalised features/mspec_train_x.npz', mspec_train_x=mspec_train_x)
+    np.savez('data/normalised features/mspec_test_x.npz', mspec_test_x=mspec_test_x)
+    np.savez('data/normalised features/mspec_val_x.npz', mspec_val_x=mspec_val_x)
+
+    dmspec_train_x = np.load('data/features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
+    dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
+    dmspec_val_x = np.load('data/features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
+    dmspec_train_x, dmspec_test_x, dmspec_val_x = standardise_features(dmspec_train_x, dmspec_test_x, dmspec_val_x)
+    np.savez('data/normalised features/dmspec_train_x.npz', dmspec_train_x=dmspec_train_x)
+    np.savez('data/normalised features/dmspec_test_x.npz', dmspec_test_x=dmspec_test_x)
+    np.savez('data/normalised features/dmspec_val_x.npz', dmspec_val_x=dmspec_val_x)
+
+    train_y = np.load('data/features/train_y.npz', allow_pickle=True)['train_y']
+    test_y = np.load('data/features/test_y.npz', allow_pickle=True)['test_y']
+    val_y = np.load('data/features/val_y.npz', allow_pickle=True)['val_y']
+    train_y, test_y, val_y = standardise_targets(train_y, test_y, val_y, state_list)
+    np.savez('data/normalised features/train_y.npz', train_y=train_y)
+    np.savez('data/normalised features/test_y.npz', test_y=test_y)
+    np.savez('data/normalised features/val_y.npz', val_y=val_y)
 
 
 if __name__ == "__main__":
@@ -371,8 +436,10 @@ if __name__ == "__main__":
     print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
     ##                                      4.5 Dynamic Features                                      ##
-    if False:
-        print("Individual dynamic and regular features created.")
-        create_features(train_data, val_data, test_data)
+    # if False:
+    print("Individual dynamic and regular features created.")
+    create_features(train_data, val_data, test_data)
 
     ##                                      4.5 Feature Standardisation                                     ##
+
+    load_and_standardise(stateList)
