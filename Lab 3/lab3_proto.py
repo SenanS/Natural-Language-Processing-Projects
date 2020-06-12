@@ -273,7 +273,7 @@ def standardise_targets(train_y, test_y, val_y, state_list):
         for idx, state in enumerate(data):
             data[idx] = state_list.index(state)
 
-    return  np_utils.to_categorical(train_y, len(state_list)), np_utils.to_categorical(test_y, len(state_list)), np_utils.to_categorical(val_y, len(state_list))
+    return np_utils.to_categorical(train_y, len(state_list)), np_utils.to_categorical(test_y, len(state_list)), np_utils.to_categorical(val_y, len(state_list))
 
 def load_and_standardise(state_list):
     #Load in, standardise and save each feature and target
@@ -308,15 +308,15 @@ def load_and_standardise(state_list):
     # np.savez('data/normalised features/dmspec_val_x.npz', dmspec_val_x=dmspec_val_x)
 
     # dmspec_train_x = np.load('data/features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
-    scalar = StandardScaler().fit(dmspec_train_x)
+    # scalar = StandardScaler().fit(dmspec_train_x)
     # normal_train_x = scalar.transform(dmspec_train_x)
     # np.savez('data/normalised features/dmspec_train_x.npz', dmspec_train_x=normal_train_x.astype('float32'))
     # dmspec_val_x = np.load('data/features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
     # normal_val_x = scalar.transform(dmspec_val_x)
     # np.savez('data/normalised features/dmspec_val_x.npz', dmspec_val_x=normal_val_x.astype('float32'))
-    dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
-    normal_test_x = scalar.transform(dmspec_test_x)
-    np.savez('data/normalised features/dmspec_test_x.npz', dmspec_test_x=normal_test_x.astype('float32'))
+    # dmspec_test_x = np.load('data/features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
+    # normal_test_x = scalar.transform(dmspec_test_x)
+    # np.savez('data/normalised features/dmspec_test_x.npz', dmspec_test_x=normal_test_x.astype('float32'))
 
     train_y = np.load('data/features/train_y.npz', allow_pickle=True)['train_y']
     test_y = np.load('data/features/test_y.npz', allow_pickle=True)['test_y']
@@ -334,8 +334,6 @@ if __name__ == "__main__":
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
-
-    load_and_standardise(stateList)
 
     ## Maybe save this stateList to a file, to preserve stability.
 
@@ -425,9 +423,9 @@ if __name__ == "__main__":
     print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
     ##                                      4.5 Dynamic Features                                      ##
-    # if False:
-    print("Individual dynamic and regular features created.")
-    create_features(train_data, val_data, test_data)
+    if False:
+        print("Individual dynamic and regular features created.")
+        create_features(train_data, val_data, test_data)
 
     ##                                      4.6 Feature Standardisation                                     ##
 
