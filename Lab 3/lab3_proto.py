@@ -335,6 +335,7 @@ if __name__ == "__main__":
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
 
+    load_and_standardise(stateList)
 
     ## Maybe save this stateList to a file, to preserve stability.
 
