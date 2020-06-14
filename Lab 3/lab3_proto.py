@@ -100,9 +100,6 @@ def hmmLoop(hmmmodels, namelist=None):
       wordLoop = hmmLoop(wordHMMs, ['o', 'z', '1', '2', '3'])
    """
 
-    # didn't we already do this in lab 2?
-    # We'll have to double check
-
 
 def extractFeatures():
     phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
@@ -334,7 +331,6 @@ if __name__ == "__main__":
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
-
     ## Maybe save this stateList to a file, to preserve stability.
 
     ##Loading examples
@@ -414,13 +410,12 @@ if __name__ == "__main__":
         train_data = np.load('data/traindata.npz', allow_pickle=True)['traindata']
         # print(train_data.shape)
         train_val_split(train_data)
-
-    train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
-    val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
-    test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
-    print("Shape of train data after split: " + str(train_data.shape))
-    print("Shape of val data after split: " + str(val_data.shape))
-    print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
+        train_data = np.load('data/train_data_split.npz', allow_pickle=True)['train_data_split']
+        val_data = np.load('data/val_data.npz', allow_pickle=True)['val_data']
+        test_data = np.load('data/testdata.npz', allow_pickle=True)['testdata']
+        print("Shape of train data after split: " + str(train_data.shape))
+        print("Shape of val data after split: " + str(val_data.shape))
+        print("Ratio val/train: " + str(val_data.shape[0] / train_data.shape[0]))
 
     ##                                      4.5 Dynamic Features                                      ##
     if False:
@@ -428,5 +423,8 @@ if __name__ == "__main__":
         create_features(train_data, val_data, test_data)
 
     ##                                      4.6 Feature Standardisation                                     ##
+    if False:
+        print("Standardising training, validation and testing datasets.\n"
+              "As well as the target data.")
+        load_and_standardise(stateList)
 
-    load_and_standardise(stateList)
