@@ -66,7 +66,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
 
     return model, saved_model
 
-if __name__ == "__main__":
+def train():
     # Load data, then use dynamic features + normalization, then call NN
 
     """
@@ -80,57 +80,56 @@ if __name__ == "__main__":
 
     """
 
-    # Enable model training by making the next line = True
-    if False:
-        # LMFCC
-        x = np.load('data/normalised features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
-        x_val = np.load('data/normalised features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
-        x_test = np.load('data/normalised features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
+    # LMFCC
+    x = np.load('data/normalised features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
+    x_val = np.load('data/normalised features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
+    x_test = np.load('data/normalised features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
 
-        y = np.load('data/normalised features/train_y.npz', allow_pickle=True)['train_y']
-        y_val = np.load('data/normalised features/val_y.npz', allow_pickle=True)['val_y']
-        y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
+    y = np.load('data/normalised features/train_y.npz', allow_pickle=True)['train_y']
+    y_val = np.load('data/normalised features/val_y.npz', allow_pickle=True)['val_y']
+    y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
 
-        x = [x, x_val, x_test]
-        y = [y, y_val, y_test]
+    x = [x, x_val, x_test]
+    y = [y, y_val, y_test]
 
-        model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="lmfcc" + "_1layer")
-        model4, best_model4 = network(x, y, epochs = 10, name="lmfcc" + "_4layer")
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="lmfcc" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="lmfcc" + "_4layer")
 
 
-        # Filterbank
-        x = np.load('data/normalised features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
-        x_val = np.load('data/normalised features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
-        x_test = np.load('data/normalised features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
+    # Filterbank
+    x = np.load('data/normalised features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
+    x_val = np.load('data/normalised features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
+    x_test = np.load('data/normalised features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
 
-        x = [x, x_val, x_test]
+    x = [x, x_val, x_test]
 
-        model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="mspec" + "_1layer")
-        model4, best_model4 = network(x, y, epochs = 10, name="mspec" + "_4layer")
-
-
-        # Dynamic features LMFCC:
-        x = np.load('data/normalised features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
-        x_val = np.load('data/normalised features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
-        x_test = np.load('data/normalised features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
-
-        x = [x, x_val, x_test]
-
-        model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dlmfcc" + "_1layer")
-        model4, best_model4 = network(x, y, epochs = 10, name="dlmfcc" + "_4layer")
-
-        # Filterbank
-        x = np.load('data/normalised features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
-        x_val = np.load('data/normalised features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
-        x_test = np.load('data/normalised features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
-
-        x = [x, x_val, x_test]
-
-        model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
-        model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="mspec" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="mspec" + "_4layer")
 
 
-    # Detailed evaluation:
+    # Dynamic features LMFCC:
+    x = np.load('data/normalised features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
+    x_val = np.load('data/normalised features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
+    x_test = np.load('data/normalised features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
+
+    x = [x, x_val, x_test]
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dlmfcc" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="dlmfcc" + "_4layer")
+
+    # Filterbank
+    x = np.load('data/normalised features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
+    x_val = np.load('data/normalised features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
+    x_test = np.load('data/normalised features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
+
+    x = [x, x_val, x_test]
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
+     
+
+if __name__ == "__main__":
+    # train()
 
     """
     Detailed evaluation description:
@@ -153,21 +152,50 @@ if __name__ == "__main__":
             same as 3. but merging the states into phonemes as in 2.
     """
 
-    # load the two models we want:
-
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
     y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
 
     for name in feature_names:
         model_one_layer = keras.models.load_model("best_model_" + name + "_1layer.h5")
         model_four_layer = keras.models.load_model("best_model_" + name + "_4layer.h5")
-        x_test = np.load("data/normalised features/" + name + "_test_x.npz", allow_pickle=True)[name + "_test_x"]
+
+        x_sample = np.load("data/normalised features/" + name + "_sample_x.npz", allow_pickle=True)[name + "_sample_x"]
+        y_sample = np.load("data/normalised features/test_sample_y.npz", allow_pickle=True)["test_sample_y"]
+
 
         # State level FbF
         print("State Level, frame-by-Frame evaluation of " + name)
         print("One Layer Model")
         prediction_one_layer = model_one_layer.predict(x_test)
+
+        # print(prediction_one_layer.shape)
+        # print(prediction_one_layer)
+
         # sum()
         print("Four Layer Model")
         prediction_four_layer = model_four_layer.predict(x_test)
 
+        # print(prediction_four_layer.shape)
+        # print(prediction_four_layer)
+
+        fig, axs = plt.subplots(3)
+        axs[0].set_title("Correct output, state level")
+        axs[0].pcolormesh(y_sample)
+        axs[1].set_title(name + " 1 layer")
+        axs[1].pcolormesh(prediction_one_layer)
+        axs[2].set_title(name + " 4 layers")
+        axs[2].pcolormesh(prediction_four_layer)
+        plt.show()
+
+        y_sample_merged = np.unique(y_sample, axis=1)
+        prediction_one_layer_merged = np.unique(prediction_one_layer, axis=1)
+        prediction_four_layer_merged = np.unique(prediction_four_layer, axis=1)
+
+        fig, axs = plt.subplots(3)
+        axs[0].set_title("Correct output, phoneme level")
+        axs[0].pcolormesh(y_sample)
+        axs[1].set_title(name + " 1 layer")
+        axs[1].pcolormesh(prediction_one_layer)
+        axs[2].set_title(name + " 4 layers")
+        axs[2].pcolormesh(prediction_four_layer)
+        plt.show()
