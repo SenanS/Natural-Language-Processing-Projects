@@ -166,9 +166,11 @@ def train_val_split(train_data):
 
 def regular_features(dataset):
     # LMFCC dimension = 13 wide
-    dim_LMFCC = train_data[0]['lmfcc'].shape[1]
+    # dim_LMFCC = train_data[0]['lmfcc'].shape[1]
+    dim_LMFCC = 13
     # MSPEC dimension = 40 wide
-    dim_MSPEC = train_data[0]['mspec'].shape[1]
+    # dim_MSPEC = train_data[0]['mspec'].shape[1]
+    dim_MSPEC = 40
     # N = the sum of the sizes of each LMFCC, MSPEC or Targets
     N = sum((x['lmfcc']).shape[0] for x in dataset)
 
@@ -186,9 +188,11 @@ def regular_features(dataset):
 
 def dynamic_features(dataset):
     # (LMFCC dimension = 13) * 7, to get a stack of 7
-    dim_LMFCC = train_data[0]['lmfcc'].shape[1] * 7
+    # dim_LMFCC = train_data[0]['lmfcc'].shape[1] * 7
+    dim_LMFCC = 13 * 7
     # (MSPEC dimension = 40) * 7, to get a stack of 7
-    dim_MSPEC = train_data[0]['mspec'].shape[1] * 7
+    # dim_MSPEC = train_data[0]['mspec'].shape[1] * 7
+    dim_MSPEC = 40 * 7
     # N = the sum of the sizes of each LMFCC, MSPEC or Targets
     N = sum((x['lmfcc']).shape[0] for x in dataset)
 
@@ -228,7 +232,7 @@ def dynamic_features(dataset):
 def create_features(train, val, test):
     # Saving all features.
 
-    lmfcc_train_x, mspec_train_x, = regular_features(train)
+    lmfcc_train_x, mspec_train_x = regular_features(train)
     lmfcc_val_x, mspec_val_x = regular_features(val)
     lmfcc_test_x, mspec_test_x = regular_features(test)
 
@@ -323,6 +327,32 @@ def load_and_standardise(state_list):
     np.savez('data/normalised features/test_y.npz', test_y=test_y)
     np.savez('data/normalised features/val_y.npz', val_y=val_y)
 
+
+def run_preprocessing():
+    phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+    phones = sorted(phoneHMMs.keys())
+    nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
+    stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
+    np.savez('state_list.npz', state_list=stateList)
+
+    final_test_data = []
+    filename = "data/final test/8729726a.wav"
+    samples, samplingrate = loadAudio(filename)
+    # Feature extraction
+    lmfcc = mfcc(samples)
+    mspec_val = mspec(samples, samplingrate=samplingrate)
+    wordTrans = list(path2info(filename)[2])
+    phoneTrans = words2phones(wordTrans, prondict)
+    targets, path = forcedAlignment(lmfcc, phoneHMMs, phoneTrans)
+    targets = [stateList.index(t) for t in targets]
+
+    final_test_data.append({'filename': filename, 'lmfcc': lmfcc,
+                      'mspec': mspec_val, 'targets': targets})
+    final_test = {}
+    final_test['lmfcc'], final_test['mspec'] = regular_features(final_test_data)
+    final_test['dlmfcc'], final_test['dmspec'], final_test['target'] = dynamic_features(final_test_data)
+
+    return final_test
 
 if __name__ == "__main__":
     ##                                      4.1 Load all possible Phones & their states.                                        ##

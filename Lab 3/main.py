@@ -1,7 +1,7 @@
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Activation
-
+from lab3_proto import run_preprocessing
 import numpy as np
 
 
@@ -126,7 +126,7 @@ def train():
 
     model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
     model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
-     
+
 
 if __name__ == "__main__":
     # train()
@@ -151,6 +151,8 @@ if __name__ == "__main__":
         4. edit distance at the phoneme level: 
             same as 3. but merging the states into phonemes as in 2.
     """
+    # final_test is the utterance we're testing our models on
+    final_test = run_preprocessing()
 
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
     y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
