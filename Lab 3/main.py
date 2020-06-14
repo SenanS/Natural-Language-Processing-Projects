@@ -21,7 +21,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
     model.add(Dense(256, input_dim=n_features, kernel_initializer='he_normal'))
     model.add(Activation('relu'))
 
-    for x in range(layers-1):
+    for i in range(layers-1):
         # Layer 2
         model.add(Dense(256, input_dim=256, kernel_initializer='he_normal'))
         model.add(Activation('relu'))
@@ -42,6 +42,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
     # Tensorboard, to be able to view training:
     callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
     model.summary()
+
     model.fit(x, y, epochs=epochs, batch_size=batch_size, validation_data=validation, callbacks=[callback, checkpoint])
 
     """
@@ -90,11 +91,10 @@ if __name__ == "__main__":
     x = [x, x_val, x_test]
     y = [y, y_val, y_test]
 
-
     model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="lmfcc" + "_1layer")
     model4, best_model4 = network(x, y, epochs = 10, name="lmfcc" + "_4layer")
 
-    
+
     # Filterbank
     x = np.load('data/normalised features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
     x_val = np.load('data/normalised features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="mspec" + "_1layer")
     model4, best_model4 = network(x, y, epochs = 10, name="mspec" + "_4layer")
 
-    
+
     # Dynamic features LMFCC:
     x = np.load('data/normalised features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
     x_val = np.load('data/normalised features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
     model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
-    
+
 
     # Detailed evaluation:
 
@@ -153,4 +153,4 @@ if __name__ == "__main__":
     # load the two models we want:
 
     # then perform the detailed evaluation:
-    # isn't 1. just our normal accuracy? I think so?
+    # isn't 1. just our normal accuracy? I think so? Agreed.
