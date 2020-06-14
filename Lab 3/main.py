@@ -161,6 +161,10 @@ if __name__ == "__main__":
         i += 1
 
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
+    state_list_LUT =    [0,0,0,1,1,1,2,2,2,3,3,3,4,4,
+                        4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,
+                        11,11,11,12,12,12,13,13,13,14,15,15,15,16,
+                        16,16,17,17,17,18,18,18,19,19,19,20,20,20]
     for name in feature_names:
         model_one_layer = keras.models.load_model("best_model_" + name + "_1layer.h5")
         model_four_layer = keras.models.load_model("best_model_" + name + "_4layer.h5")
@@ -190,18 +194,26 @@ if __name__ == "__main__":
 
         state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
 
-        y_sample_merged = np.unique(y_sample, axis=1)
+        y_sample_merged = np.zeros((324, 21))
+        prediction_one_layer_merged = np.zeros((324, 21))
+        prediction_four_layer_merged = np.zeros((324, 21))
 
-        # prediction_one_layer_merged = zeros((324, 21))
-        # prediction_four_layer_merged = np.unique(prediction_four_layer, axis=1)
-        #
-        # fig, axs = plt.subplots(3)
-        # axs[0].set_title("Correct output, phoneme level")
-        # axs[0].pcolormesh(y_sample.T)
-        # axs[1].set_title(name + " 1 layer")
-        # axs[1].pcolormesh(prediction_one_layer.T)
-        # axs[2].set_title(name + " 4 layers")
-        # axs[2].pcolormesh(prediction_four_layer.T)
-        # plt.show()
+        for i in range(324):
+            for j in range(61):
+                if np.round(y_sample[i, j], 0) == 1:
+                    y_sample_merged[i, state_list_LUT[j]] = 1
+                if np.round(prediction_one_layer[i, j], 0) == 1:
+                    prediction_one_layer_merged[i, state_list_LUT[j]] = 1
+                if np.round(prediction_four_layer[i, j], 0) == 1:
+                    prediction_four_layer_merged[i, state_list_LUT[j]] = 1
+
+        fig, axs = plt.subplots(3)
+        axs[0].set_title("Correct output, phoneme level")
+        axs[0].pcolormesh(y_sample_merged.T)
+        axs[1].set_title(name + " 1 layer")
+        axs[1].pcolormesh(prediction_one_layer_merged.T)
+        axs[2].set_title(name + " 4 layers")
+        axs[2].pcolormesh(prediction_four_layer_merged.T)
+        plt.show()
 
     print(0)
