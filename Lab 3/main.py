@@ -4,6 +4,7 @@ from keras.layers import Dense, Activation
 
 import numpy as np
 
+
 def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
 
     x, x_val, x_test = data
@@ -40,7 +41,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
     validation = (x_val, y_val)
 
     # Tensorboard, to be able to view training:
-    callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+    callback = keras.callbacks.TensorBoard(log_dir="./Graph/" + name, histogram_freq=0, write_graph=True, write_images=True)
     model.summary()
 
     model.fit(x, y, epochs=epochs, batch_size=batch_size, validation_data=validation, callbacks=[callback, checkpoint])
