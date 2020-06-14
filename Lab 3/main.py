@@ -136,7 +136,7 @@ def transcribe(target, output):
     for i in range(1, target.shape[0]):
         curr_state = target[i, :]
 
-        if (curr_state.all == prev_state).all():
+        if (curr_state == prev_state).all():
             ret[-1, :] = (ret[-1, :] + output[i, :])/2
         else:
             ret = np.vstack((ret, output[i, :]))
