@@ -333,7 +333,8 @@ def run_preprocessing():
     phones = sorted(phoneHMMs.keys())
     nstates = {phone: phoneHMMs[phone]['means'].shape[0] for phone in phones}
     stateList = [ph + '_' + str(id) for ph in phones for id in range(nstates[ph])]
-    np.savez('state_list.npz', state_list=stateList)
+    # np.savez('state_list.npz', state_list=stateList)
+    # stateList = np.load('state_list.npz', allow_pickle=True)['state_list']
 
     final_test_data = []
     filename = "data/final test/8729726a.wav"
