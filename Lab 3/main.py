@@ -130,16 +130,16 @@ def train():
 
 
 def transcribe(target, output):
-    ret = output[:, 0]
-    prev_state = target[:, 0].T
+    ret = np.array([output[:, 0]]).T
+    prev_state = target[:, 0]
 
     for i in range(1, target.shape[1]):
         curr_state = target[:, i]
 
         if (curr_state.all == prev_state).all():
-            ret[:, -1] = (ret[:, -1] + output[:, i])/2
+            ret[:, -1] = (ret[:, -1] + np.array([output[:, i]]).T)/2
         else:
-            ret = np.hstack((ret, output[:, i].T))
+            ret = np.hstack((ret, np.array([output[:, i]]).T))
 
         prev_state = curr_state
 
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer.T)
         plt.show()
-        """
+        
 
         state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
 
@@ -234,11 +234,12 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer_merged.T)
         plt.show()
+        """
 
         y_transcribed = transcribe(y_sample, y_sample)
         pred_one_layer_trans = transcribe(y_sample, prediction_one_layer)
         pred_four_layer_trans = transcribe(y_sample, prediction_four_layer)
-
+        print(y_sample.shape)
         print(y_transcribed.shape)
 
     print(0)
