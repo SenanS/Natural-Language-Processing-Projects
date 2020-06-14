@@ -8,3 +8,7 @@ __pycache__/
 tidigits/
 
 data/
+
+Graph/
+
+*.h5

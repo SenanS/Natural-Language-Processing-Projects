@@ -2,6 +2,7 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 
+import numpy as np
 
 def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
 
@@ -76,39 +77,55 @@ if __name__ == "__main__":
         Note the evolution of the loss function and the accuracy of the model f
 
     """
-    x_all = []
-    y_all = []
 
     # LMFCC
-    x_all.append([x_lmfcc, x_lmfxx_val, x_lmfcc_test])
-    y_all.append([y_lmfcc, y_lmfxx_val, y_lmfcc_test])
+    x = np.load('data/normalised features/lmfcc_train_x.npz', allow_pickle=True)['lmfcc_train_x']
+    x_val = np.load('data/normalised features/lmfcc_val_x.npz', allow_pickle=True)['lmfcc_val_x']
+    x_test = np.load('data/normalised features/lmfcc_test_x.npz', allow_pickle=True)['lmfcc_test_x']
 
+    y = np.load('data/normalised features/train_y.npz', allow_pickle=True)['train_y']
+    y_val = np.load('data/normalised features/val_y.npz', allow_pickle=True)['val_y']
+    y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
+
+    x = [x, x_val, x_test]
+    y = [y, y_val, y_test]
+
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="lmfcc" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="lmfcc" + "_4layer")
+
+    
     # Filterbank
-    x_all.append([x_filter, x_filter_val, x_filter_test])
-    y_all.append([y_filter, y_filter_val, y_filter_test])
+    x = np.load('data/normalised features/mspec_train_x.npz', allow_pickle=True)['mspec_train_x']
+    x_val = np.load('data/normalised features/mspec_val_x.npz', allow_pickle=True)['mspec_val_x']
+    x_test = np.load('data/normalised features/mspec_test_x.npz', allow_pickle=True)['mspec_test_x']
 
+    x = [x, x_val, x_test]
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="mspec" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="mspec" + "_4layer")
+
+    
     # Dynamic features LMFCC:
-    x_all.append([x_lmfcc_dyn, x_lmfxx_val_dyn, x_lmfcc_test_dyn])
-    y_all.append([y_lmfcc_dyn, y_lmfxx_val_dyn, y_lmfcc_test_dyn])
+    x = np.load('data/normalised features/dlmfcc_train_x.npz', allow_pickle=True)['dlmfcc_train_x']
+    x_val = np.load('data/normalised features/dlmfcc_val_x.npz', allow_pickle=True)['dlmfcc_val_x']
+    x_test = np.load('data/normalised features/dlmfcc_test_x.npz', allow_pickle=True)['dlmfcc_test_x']
+
+    x = [x, x_val, x_test]
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dlmfcc" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="dlmfcc" + "_4layer")
 
     # Filterbank
-    x_all.append([x_filter_dyn, x_filter_val_dyn, x_filter_test_dyn])
-    y_all.append([y_filter_dyn, y_filter_val_dyn, y_filter_test_dyn])
+    x = np.load('data/normalised features/dmspec_train_x.npz', allow_pickle=True)['dmspec_train_x']
+    x_val = np.load('data/normalised features/dmspec_val_x.npz', allow_pickle=True)['dmspec_val_x']
+    x_test = np.load('data/normalised features/dmspec_test_x.npz', allow_pickle=True)['dmspec_test_x']
 
-    # idk; maybe save the best models? might be worth something....
-    for i in range(len(x_all)):
-        name = ""
-        if i == 0:
-            name = "lmfcc"
-        elif i == 1:
-            name = "filterbank"
-        elif i == 2:
-            name = "lmfcc_dyn"
-        else:
-            name = "filterbank_dyn"
-        
-        model1, best_model1 = network(x_all[i], y_all[i], epochs = 10, layers = 1, name=name + "_1layer")
-        model4, best_model4 = network(x_all[i], y_all[i], epochs = 10, name=name + "_4layer")
+    x = [x, x_val, x_test]
+
+    model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
+    model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
+    
 
     # Detailed evaluation:
 
