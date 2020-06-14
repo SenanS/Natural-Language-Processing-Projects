@@ -129,6 +129,23 @@ def train():
     model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
 
 
+def transcribe(target, output):
+    ret = output[:, 0]
+    prev_state = target[:, 0].T
+
+    for i in range(1, target.shape[1]):
+        curr_state = target[:, i]
+
+        if (curr_state.all == prev_state).all():
+            ret[:, -1] = (ret[:, -1] + output[:, i])/2
+        else:
+            ret = np.hstack((ret, output[:, i].T))
+
+        prev_state = curr_state
+
+    return ret
+
+
 if __name__ == "__main__":
     # train()
 
@@ -179,6 +196,7 @@ if __name__ == "__main__":
         # print(prediction_four_layer.shape)
         # print(prediction_four_layer)
 
+        """
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level")
         axs[0].pcolormesh(y_sample.T)
@@ -187,6 +205,7 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer.T)
         plt.show()
+        """
 
         state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
 
@@ -203,5 +222,11 @@ if __name__ == "__main__":
         # axs[2].set_title(name + " 4 layers")
         # axs[2].pcolormesh(prediction_four_layer.T)
         # plt.show()
+
+        y_transcribed = transcribe(y_sample, y_sample)
+        pred_one_layer_trans = transcribe(y_sample, prediction_one_layer)
+        pred_four_layer_trans = transcribe(y_sample, prediction_four_layer)
+
+        print(y_transcribed.shape)
 
     print(0)
