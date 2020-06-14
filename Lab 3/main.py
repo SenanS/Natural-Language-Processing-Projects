@@ -154,7 +154,11 @@ if __name__ == "__main__":
     """
     # final_test is the utterance we're testing our models on
     final_test = run_preprocessing()
-    y_sample = final_test['target']
+    y_sample = np.zeros((len(final_test['target']), 61))
+    i = 0
+    for x in final_test['target']:
+        y_sample[i, x] = 1
+        i += 1
 
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
     for name in feature_names:
@@ -177,24 +181,27 @@ if __name__ == "__main__":
 
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level")
-        axs[0].pcolormesh(y_sample)
+        axs[0].pcolormesh(y_sample.T)
         axs[1].set_title(name + " 1 layer")
-        axs[1].pcolormesh(prediction_one_layer)
+        axs[1].pcolormesh(prediction_one_layer.T)
         axs[2].set_title(name + " 4 layers")
-        axs[2].pcolormesh(prediction_four_layer)
+        axs[2].pcolormesh(prediction_four_layer.T)
         plt.show()
+
+        state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
 
         y_sample_merged = np.unique(y_sample, axis=1)
-        prediction_one_layer_merged = np.unique(prediction_one_layer, axis=1)
-        prediction_four_layer_merged = np.unique(prediction_four_layer, axis=1)
 
-        fig, axs = plt.subplots(3)
-        axs[0].set_title("Correct output, phoneme level")
-        axs[0].pcolormesh(y_sample)
-        axs[1].set_title(name + " 1 layer")
-        axs[1].pcolormesh(prediction_one_layer)
-        axs[2].set_title(name + " 4 layers")
-        axs[2].pcolormesh(prediction_four_layer)
-        plt.show()
+        # prediction_one_layer_merged = zeros((324, 21))
+        # prediction_four_layer_merged = np.unique(prediction_four_layer, axis=1)
+        #
+        # fig, axs = plt.subplots(3)
+        # axs[0].set_title("Correct output, phoneme level")
+        # axs[0].pcolormesh(y_sample.T)
+        # axs[1].set_title(name + " 1 layer")
+        # axs[1].pcolormesh(prediction_one_layer.T)
+        # axs[2].set_title(name + " 4 layers")
+        # axs[2].pcolormesh(prediction_four_layer.T)
+        # plt.show()
 
     print(0)
