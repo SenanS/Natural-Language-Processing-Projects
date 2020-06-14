@@ -2,6 +2,7 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 from lab3_proto import run_preprocessing
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -153,29 +154,23 @@ if __name__ == "__main__":
     """
     # final_test is the utterance we're testing our models on
     final_test = run_preprocessing()
+    y_sample = final_test['target']
 
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
-    y_test = np.load('data/normalised features/test_y.npz', allow_pickle=True)['test_y']
-
     for name in feature_names:
         model_one_layer = keras.models.load_model("best_model_" + name + "_1layer.h5")
         model_four_layer = keras.models.load_model("best_model_" + name + "_4layer.h5")
 
-        x_sample = np.load("data/normalised features/" + name + "_sample_x.npz", allow_pickle=True)[name + "_sample_x"]
-        y_sample = np.load("data/normalised features/test_sample_y.npz", allow_pickle=True)["test_sample_y"]
-
+        # x_sample = np.load("data/normalised features/" + name + "_sample_x.npz", allow_pickle=True)[name + "_sample_x"]
+        # y_sample = np.load("data/normalised features/test_sample_y.npz", allow_pickle=True)["test_sample_y"]
 
         # State level FbF
         print("State Level, frame-by-Frame evaluation of " + name)
         print("One Layer Model")
-        prediction_one_layer = model_one_layer.predict(x_test)
+        prediction_one_layer = model_one_layer.predict(final_test[name])
 
-        # print(prediction_one_layer.shape)
-        # print(prediction_one_layer)
-
-        # sum()
         print("Four Layer Model")
-        prediction_four_layer = model_four_layer.predict(x_test)
+        prediction_four_layer = model_four_layer.predict(final_test[name])
 
         # print(prediction_four_layer.shape)
         # print(prediction_four_layer)
@@ -201,3 +196,5 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer)
         plt.show()
+
+    print(0)
