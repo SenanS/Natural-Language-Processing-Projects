@@ -200,7 +200,6 @@ if __name__ == "__main__":
         # print(prediction_four_layer.shape)
         # print(prediction_four_layer)
 
-        """
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level")
         axs[0].pcolormesh(y_sample.T)
@@ -234,12 +233,19 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer_merged.T)
         plt.show()
-        """
 
         y_transcribed = transcribe(y_sample, y_sample)
         pred_one_layer_trans = transcribe(y_sample, prediction_one_layer)
         pred_four_layer_trans = transcribe(y_sample, prediction_four_layer)
-        print(y_sample.shape)
-        print(y_transcribed.shape)
+
+        fig, axs = plt.subplots(3)
+        axs[0].set_title("Correct output, state level merged")
+        axs[0].pcolormesh(y_transcribed.T)
+        axs[1].set_title(name + " 1 layer")
+        axs[1].pcolormesh(pred_one_layer_trans.T)
+        axs[2].set_title(name + " 4 layers")
+        axs[2].pcolormesh(pred_four_layer_trans.T)
+        plt.show()
+
 
     print(0)
