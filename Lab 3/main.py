@@ -130,16 +130,16 @@ def train():
 
 
 def transcribe(target, output):
-    ret = np.array([output[:, 0]]).T
-    prev_state = target[:, 0]
+    ret = output[0, :]
+    prev_state = target[0, :]
 
-    for i in range(1, target.shape[1]):
-        curr_state = target[:, i]
+    for i in range(1, target.shape[0]):
+        curr_state = target[i, :]
 
         if (curr_state.all == prev_state).all():
-            ret[:, -1] = (ret[:, -1] + np.array([output[:, i]]).T)/2
+            ret[-1, :] = (ret[-1, :] + output[i, :])/2
         else:
-            ret = np.hstack((ret, np.array([output[:, i]]).T))
+            ret = np.vstack((ret, output[i, :]))
 
         prev_state = curr_state
 
