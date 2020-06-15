@@ -47,6 +47,7 @@ def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
     model.summary()
 
     model.fit(x, y, epochs=epochs, batch_size=batch_size, validation_data=validation, callbacks=[callback, checkpoint])
+    # lr = 0.01, momentum = 0
 
     """
     accuracy = model.evaluate(x_test, y_test)
@@ -129,7 +130,6 @@ def train():
     model1, best_model1 = network(x, y, epochs = 10, layers = 1, name="dmspec" + "_1layer")
     model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
 
-
 def transcribe(sequence):
     ## I didn't think the transcribe function was working as it was meant to. Made a new one, which I think works..?
 # def transcribe(target, output):
@@ -183,6 +183,7 @@ if __name__ == "__main__":
         4. edit distance at the phoneme level: 
             same as 3. but merging the states into phonemes as in 2.
     """
+
     # final_test is the utterance we're testing our models on
     final_test = run_preprocessing()
     y_sample = np.zeros((len(final_test['target']), 61))
@@ -331,4 +332,4 @@ if __name__ == "__main__":
 
         # TODO: Label all axes. Write meaningful notes about graphics.
         # TODO: Answer Questions
-    print(0)
+        print(0)

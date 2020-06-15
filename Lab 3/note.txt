@@ -5,7 +5,7 @@
 
     dynamic features was a lot better (~+10% accuracy), both for dynamic and mspec
 
-    dmspec was 1% worse than mspec, so not a large difference.
+    mspec was 1% worse than dlmfcc, so not a large difference.
 
 
 • what is the purpose of normalising (standardising) the input feature vectors depending on
@@ -14,6 +14,8 @@ the activation functions in the network?
 
 
 • what is the influence of the number of units per layer and the number of layers?
+
+    both increase complexity
     number of layers: more layers let the network model more complex relationships between the variables [non-linear],
     
     in our case we saw performance increases when using dynamic features, both mspec and lmfcc
@@ -23,21 +25,21 @@ the activation functions in the network?
 than ReLU, you do not need to reach convergence in case you do not have enough time)
     Did not test, did not have time...
 
-
 • what is the influence of the learning rate/learning rate strategy?
 
-    Learning rate can help prevent neural networks to overcorrect for data-instances and makes it easier for the network to converge on a good solution, 
-    for example by making large changes in the beginning but gradually decreaseing the size of update steps later.
-        Not tested by us, we did not have time:
+    Learning rate can help prevent neural networks to overcorrect for data-instances and makes it easier for the network
+    to converge on a good solution, for example by making large changes in the beginning but gradually decreasing the
+    size of update steps later.   Not tested by us, we did not have time:
             "There are many other parameters that you can vary, if you have time to play with the models."
 
 
 • how stable are the posteriograms from the network in time?
-
+    Posteriorgrams were awfully unstable.
+    We chose a sample with a very low frame-by frame accuracy
 
 
 
 • how do the errors distribute depending on phonetic class?
-    
 
-    (some phonemes themselves present a stable pattern in time, while consonant plosives do not, could explain some of the results)
+    (some phonemes themselves present a stable pattern in time, while consonant plosives do not,
+    could explain some of the results)
