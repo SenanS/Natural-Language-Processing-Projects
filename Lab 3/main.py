@@ -192,6 +192,7 @@ if __name__ == "__main__":
         i += 1
 
     feature_names = ["lmfcc", "mspec", "dlmfcc", "dmspec"]
+    state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
     state_list_LUT =    [0,0,0,1,1,1,2,2,2,3,3,3,4,4,
                         4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,
                         11,11,11,12,12,12,13,13,13,14,15,15,15,16,
@@ -209,6 +210,26 @@ if __name__ == "__main__":
         print("Four Layer Model")
         prediction_four_layer = model_four_layer.predict(final_test[name])
 
+        compressed_y = np.argmax(y_sample, axis=1)
+        compressed_pred_four = np.argmax(prediction_four_layer, axis=1)
+        compressed_pred_one = np.argmax(prediction_one_layer, axis=1)
+        stated_y = [state_list[int(i)] for i in compressed_y]
+        stated_pred_four = [state_list[int(i)] for i in compressed_pred_four]
+        stated_pred_one = [state_list[int(i)] for i in compressed_pred_one]
+
+        if False:
+            four_count = 0
+            one_count = 0
+            for i in range(324):
+                if compressed_pred_four[i] == compressed_y[i]:
+                    four_count += 1
+                if compressed_pred_one[i] == compressed_y[i]:
+                    one_count += 1
+
+            print("Part 1: {:.2f}% correct from 1 layer.".format(one_count/324))
+            print("Part 1: {:.2f}% correct from 4 layer.".format(four_count/324))
+            full_four = np.argmax(model_four_layer.predict(final_test[name]), axis=1)
+
 
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level")
@@ -219,30 +240,29 @@ if __name__ == "__main__":
         axs[2].pcolormesh(prediction_four_layer.T)
         plt.show()
 
-        confusion = confusion_matrix(np.argmax(y_sample, axis=1), np.argmax(prediction_four_layer, axis=1),
-                                     normalize='true')
+        confusion = confusion_matrix(compressed_y, compressed_pred_four, normalize='true')
         plt.imshow(confusion)
         plt.title("Part 1: Confusion Matrix of " + name + " Predictions vs. Ground Truths")
         plt.xlabel('Posteriors')
         plt.ylabel('Target Values')
+        # plt.xticks(range(compressed_pred_four.shape[1]), state_list[:compressed_pred_four.shape[0]])
+        # plt.yticks(range(compressed_y.shape[0]), state_list[:compressed_y.shape[0]])
         plt.show()
 
 
         # Part 2 Phenome Level FbF
-        state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
-
         y_sample_merged = np.zeros((324, 21))
         prediction_one_layer_merged = np.zeros((324, 21))
         prediction_four_layer_merged = np.zeros((324, 21))
 
         for i in range(324):
-            for j in range(61):
-                if np.round(y_sample[i, j], 0) == 1:
-                    y_sample_merged[i, state_list_LUT[j]] = 1
-                if np.round(prediction_one_layer[i, j], 0) == 1:
-                    prediction_one_layer_merged[i, state_list_LUT[j]] = 1
-                if np.round(prediction_four_layer[i, j], 0) == 1:
-                    prediction_four_layer_merged[i, state_list_LUT[j]] = 1
+            # for j in range(61):
+            # if np.round(compressed_y[i], 0) == 1:
+            y_sample_merged[i, state_list_LUT[compressed_y[i]]] = 1
+            # if np.round(compressed_pred_one[i], 0) == 1:
+            prediction_one_layer_merged[i, state_list_LUT[compressed_pred_one[i]]] = 1
+            # if np.round(compressed_pred_four[i], 0) == 1:
+            prediction_four_layer_merged[i, state_list_LUT[compressed_pred_four[i]]] = 1
         
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, phoneme level")
@@ -278,8 +298,8 @@ if __name__ == "__main__":
         axs[2].pcolormesh(pred_four_layer_trans.T)
         plt.show()
 
-        seq = SequenceMatcher(y_transcribed, prediction_four_layer_merged)
-        distance = seq.distance() / y_transcribed.shape[0]
+        seq1 = SequenceMatcher(y_transcribed, prediction_four_layer_merged)
+        distance = seq1.distance() / 324*100
 
         # TODO: Then measure the Phone Error Rate (PER),
         #  that is the length normalised edit distance between the sequence
@@ -302,8 +322,11 @@ if __name__ == "__main__":
         axs[1].set_title(name + " 1 layer")
         axs[1].pcolormesh(pred_one_layer_trans_merged.T)
         axs[2].set_title(name + " 4 layers")
-        axs[2].pcolormesh(pred_one_layer_trans_merged.T)
+        axs[2].pcolormesh(pred_four_layer_trans_merged.T)
         plt.show()
+
+        seq2 = SequenceMatcher(y_transcribed_merged, pred_four_layer_trans_merged)
+        # distance = seq2.distance()
 
 
         # TODO: Label all axes. Write meaningful notes about graphics.
