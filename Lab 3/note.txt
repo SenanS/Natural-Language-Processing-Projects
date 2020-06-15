@@ -1,0 +1,43 @@
+• what is the influence of feature kind and size of input context window?
+    We saw that the different features performed quite differently,
+    
+    with lmfcc performing the worst, mspec performing slightly better (not really, .2%)
+
+    dynamic features was a lot better (~+10% accuracy), both for dynamic and mspec
+
+    dmspec was 1% worse than mspec, so not a large difference.
+
+
+• what is the purpose of normalising (standardising) the input feature vectors depending on
+the activation functions in the network?
+    so that we don't have to change weights massively in the neural network - depending on the size of a given input.
+
+
+• what is the influence of the number of units per layer and the number of layers?
+    number of layers: more layers let the network model more complex relationships between the variables [non-linear],
+    
+    in our case we saw performance increases when using dynamic features, both mspec and lmfcc
+    when using 4 layers instead of using 1 layer.
+
+• what is the influence of the activation function (when you try other activation functions
+than ReLU, you do not need to reach convergence in case you do not have enough time)
+    Did not test, did not have time...
+
+
+• what is the influence of the learning rate/learning rate strategy?
+
+    Learning rate can help prevent neural networks to overcorrect for data-instances and makes it easier for the network to converge on a good solution, 
+    for example by making large changes in the beginning but gradually decreaseing the size of update steps later.
+        Not tested by us, we did not have time:
+            "There are many other parameters that you can vary, if you have time to play with the models."
+
+
+• how stable are the posteriograms from the network in time?
+
+
+
+
+• how do the errors distribute depending on phonetic class?
+    
+
+    (some phonemes themselves present a stable pattern in time, while consonant plosives do not, could explain some of the results)
