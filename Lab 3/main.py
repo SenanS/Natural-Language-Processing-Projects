@@ -1,10 +1,11 @@
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Activation
+from sklearn.metrics import confusion_matrix
 from lab3_proto import run_preprocessing
 import matplotlib.pyplot as plt
 import numpy as np
-
+from edit_distance import SequenceMatcher
 
 def network(data, labels, epochs=20, batch_size=256, layers=4, name="test"):
 
@@ -129,21 +130,34 @@ def train():
     model4, best_model4 = network(x, y, epochs = 10, name="dmspec" + "_4layer")
 
 
-def transcribe(target, output):
-    ret = output[0, :]
-    prev_state = target[0, :]
+def transcribe(sequence):
+    ## I didn't think the transcribe function was working as it was meant to. Made a new one, which I think works..?
+# def transcribe(target, output):
+    # ret = output[0, :]
+    # prev_state = target[0, :]
+    #
+    # for i in range(1, target.shape[0]):
+    #     curr_state = target[i, :]
+    #
+    #     if (curr_state == prev_state).all():
+    #         ret[-1, :] = (ret[-1, :] + output[i, :])/2
+    #     else:
+    #         ret = np.vstack((ret, output[i, :]))
+    #
+    #     prev_state = curr_state
+    #
+    # return ret
 
-    for i in range(1, target.shape[0]):
-        curr_state = target[i, :]
+    merged_seq = sequence[0, :]
+    prev_state = sequence[0, :]
 
-        if (curr_state == prev_state).all():
-            ret[-1, :] = (ret[-1, :] + output[i, :])/2
-        else:
-            ret = np.vstack((ret, output[i, :]))
-
+    for i in range(1, sequence.shape[0]):
+        curr_state = sequence[i, :]
+        if not np.array_equal(curr_state, prev_state) :
+            merged_seq = np.vstack((merged_seq, sequence[i, :]))
         prev_state = curr_state
 
-    return ret
+    return merged_seq
 
 
 if __name__ == "__main__":
@@ -182,23 +196,19 @@ if __name__ == "__main__":
                         4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,
                         11,11,11,12,12,12,13,13,13,14,15,15,15,16,
                         16,16,17,17,17,18,18,18,19,19,19,20,20,20]
+
     for name in feature_names:
+        # TODO: work out the full test % accuracies by this metric using argmax
         model_one_layer = keras.models.load_model("best_model_" + name + "_1layer.h5")
         model_four_layer = keras.models.load_model("best_model_" + name + "_4layer.h5")
 
-        # x_sample = np.load("data/normalised features/" + name + "_sample_x.npz", allow_pickle=True)[name + "_sample_x"]
-        # y_sample = np.load("data/normalised features/test_sample_y.npz", allow_pickle=True)["test_sample_y"]
-
-        # State level FbF
+        # Part 1: State level FbF
         print("State Level, frame-by-Frame evaluation of " + name)
         print("One Layer Model")
         prediction_one_layer = model_one_layer.predict(final_test[name])
-
         print("Four Layer Model")
         prediction_four_layer = model_four_layer.predict(final_test[name])
 
-        # print(prediction_four_layer.shape)
-        # print(prediction_four_layer)
 
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level")
@@ -208,8 +218,17 @@ if __name__ == "__main__":
         axs[2].set_title(name + " 4 layers")
         axs[2].pcolormesh(prediction_four_layer.T)
         plt.show()
-        
 
+        confusion = confusion_matrix(np.argmax(y_sample, axis=1), np.argmax(prediction_four_layer, axis=1),
+                                     normalize='true')
+        plt.imshow(confusion)
+        plt.title("Part 1: Confusion Matrix of " + name + " Predictions vs. Ground Truths")
+        plt.xlabel('Posteriors')
+        plt.ylabel('Target Values')
+        plt.show()
+
+
+        # Part 2 Phenome Level FbF
         state_list = np.load('state_list.npz', allow_pickle=True)['state_list']
 
         y_sample_merged = np.zeros((324, 21))
@@ -224,7 +243,7 @@ if __name__ == "__main__":
                     prediction_one_layer_merged[i, state_list_LUT[j]] = 1
                 if np.round(prediction_four_layer[i, j], 0) == 1:
                     prediction_four_layer_merged[i, state_list_LUT[j]] = 1
-
+        
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, phoneme level")
         axs[0].pcolormesh(y_sample_merged.T)
@@ -234,9 +253,21 @@ if __name__ == "__main__":
         axs[2].pcolormesh(prediction_four_layer_merged.T)
         plt.show()
 
-        y_transcribed = transcribe(y_sample, y_sample)
-        pred_one_layer_trans = transcribe(y_sample, prediction_one_layer)
-        pred_four_layer_trans = transcribe(y_sample, prediction_four_layer)
+        confusion = confusion_matrix(np.argmax(y_sample_merged, axis=1), np.argmax(prediction_four_layer_merged, axis=1),
+                                     normalize='true')
+        plt.imshow(confusion)
+        plt.title("Part 2: Confusion Matrix of " + name + " Merged Predictions vs. Merged Ground Truths")
+        plt.xlabel('Posteriors')
+        plt.ylabel('Target Values')
+        plt.show()
+
+        # Part 3 State Level edit dist
+        # y_transcribed = transcribe(y_sample, y_sample)
+        # pred_one_layer_trans = transcribe(y_sample, prediction_one_layer)
+        # pred_four_layer_trans = transcribe(y_sample, prediction_four_layer)
+        y_transcribed = transcribe(y_sample)
+        pred_one_layer_trans = transcribe(prediction_one_layer)
+        pred_four_layer_trans = transcribe(prediction_four_layer)
 
         fig, axs = plt.subplots(3)
         axs[0].set_title("Correct output, state level merged")
@@ -247,5 +278,34 @@ if __name__ == "__main__":
         axs[2].pcolormesh(pred_four_layer_trans.T)
         plt.show()
 
+        seq = SequenceMatcher(y_transcribed, prediction_four_layer_merged)
+        distance = seq.distance() / y_transcribed.shape[0]
 
+        # TODO: Then measure the Phone Error Rate (PER),
+        #  that is the length normalised edit distance between the sequence
+        #  of states from the DNN and the correct transcription
+
+        # TODO: Use SequenceMatcher from edit distance to quickly calculate PER
+
+
+        # Part 4 Phenome Level edit dist
+        # y_transcribed_merged = transcribe(y_sample_merged, y_sample_merged)
+        # pred_one_layer_trans_merged = transcribe(y_sample_merged, prediction_one_layer_merged)
+        # pred_four_layer_trans_merged = transcribe(y_sample_merged, prediction_four_layer_merged)
+        y_transcribed_merged = transcribe(y_sample_merged)
+        pred_one_layer_trans_merged = transcribe(prediction_one_layer_merged)
+        pred_four_layer_trans_merged = transcribe(prediction_four_layer_merged)
+
+        fig, axs = plt.subplots(3)
+        axs[0].set_title("Correct output, state level merged")
+        axs[0].pcolormesh(y_transcribed_merged.T)
+        axs[1].set_title(name + " 1 layer")
+        axs[1].pcolormesh(pred_one_layer_trans_merged.T)
+        axs[2].set_title(name + " 4 layers")
+        axs[2].pcolormesh(pred_one_layer_trans_merged.T)
+        plt.show()
+
+
+        # TODO: Label all axes. Write meaningful notes about graphics.
+        # TODO: Answer Questions
     print(0)
