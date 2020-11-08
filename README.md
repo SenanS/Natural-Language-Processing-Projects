@@ -11,3 +11,9 @@ correlation between these features was evaluated & utterances were
 Algorithms for the evaluation and decoding of Hidden Markov Models
 implemented, this implementation was used to perform isolated word 
 recognition & algorithms for training Gaussian HMMs were implemented.
+
+
+### Lab 3 - Phoneme Recognition with Deep Neural Networks
+Used predefined Gaussian-emission HMM phonetic models, to create time aligned phonetic
+transcriptions of the TIDIGITS database. 
+A DNN model for phoneme recognition was trained using Keras and evaluated on a frame-by-frame recognition score.
