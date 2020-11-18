@@ -1,4 +1,4 @@
-# DT2119
+# Natural Language Processing Projects 
 Labs completed for Speech and Speaker Recognition, KTH 2020.
 
 ### Lab 1 - Feature Extraction
